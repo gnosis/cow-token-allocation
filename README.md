@@ -50,7 +50,7 @@ To, briefly summarize the approach we;
 4. Fetch Gnosis Chain Depositors
 5. Compute GNO holdings of LP providers based on share % in correspondence with the
    Pool's holdings (from step 1)
-6. Combine all of these values together to generate combined (Mainnet and GnosisChain
+6. Combine all of these values together to generate combined (Mainnet and Gnosis Chain
    CSV) representing total GNO holdings across all eligible platforms.
 7. Fetch and merge trader data from both networks
 8. Filter the combined Trader data by the eligibility criteria
@@ -443,12 +443,6 @@ python -m src.main
 ```
 
 **NOTE** Entire allocation generation from scratch takes about 15 minutes.
-
-_DISCLAIMER_ Due to reliance on a non-deterministic price feed in the trader query we
-are experiencing infinitesimal difference from one run to the next. While the results
-will turn out marginally different the allocation files are not yet deterministic. We
-are working toward fixing this, but will rely on the committed file here at the time of
-deployment even if this non-determinism has not been resolved.
 
 ### Verifying results
 
