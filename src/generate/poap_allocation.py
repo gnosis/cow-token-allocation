@@ -32,12 +32,12 @@ class TokenAllocation:
 ALPHA_TRADER_ALLOCATION = {
     'mainnet': TokenAllocation(
         token_id=1,  # Doesn't matter, use network id
-        factor=8,
+        factor=16,
         event="Traded on Alpha & Beta Contract (mainnet)"
     ),
     'gchain': TokenAllocation(
         token_id=100,  # Doesn't matter, use network id
-        factor=2,
+        factor=4,
         event="Traded on Alpha & Beta Contract (gchain)"
     )
 
