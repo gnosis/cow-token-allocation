@@ -4,6 +4,7 @@ Stores the result of querying trader data on each network into respectively name
 """
 from __future__ import annotations
 
+import csv
 import os
 from collections import defaultdict
 from dataclasses import dataclass
@@ -13,7 +14,7 @@ from src.constants import VOLUME_TIERS, TRADING_TIER_FACTORS, SNAPSHOT_BLOCK_NUM
     USER_OPTION_TIER_FACTORS
 from src.dune_analytics import DuneAnalytics
 from src.fetch.combined_holders import load_excluded_accounts
-from src.files import NetworkFile, TraderFiles
+from src.files import NetworkFile, TraderFiles, File
 from src.models import Account, Allocation
 from src.utils.data import dump_results_and_index_by_account, write_to_csv
 
@@ -111,6 +112,26 @@ class CowSwapTrader(Account):
         self.first_trade = first_trade
         self.last_trade = last_trade
         self.allocation_tier = self._compute_allocation_tier()
+
+    @classmethod
+    def load_from(cls, load_file: File) -> dict[str, CowSwapTrader]:
+        """Loads liquidity proportions from filename"""
+        print(f"Loading Trader Data from {load_file.name}")
+        results = {}
+        with open(load_file.filename(), 'r', encoding='utf-8') as file:
+            dict_reader = csv.DictReader(file)
+            for row in dict_reader:
+                account = row['account']
+                results[account] = cls(
+                    account=account,
+                    eligible_volume=int(row['eligible_volume']),
+                    num_trades=int(row['num_trades']),
+                    first_trade=datetime.strptime(row['first_trade'],
+                                                  "%Y-%m-%d").date(),
+                    last_trade=datetime.strptime(row['last_trade'], "%Y-%m-%d").date(),
+                )
+        print(f"Loaded {len(results)} trader records")
+        return results
 
     def _compute_allocation_tier(self) -> int:
         if self.eligible_volume < VOLUME_TIERS[0]:
@@ -214,6 +235,12 @@ def fetch_trader_data(
     :param load_from: File to load from (todo - load from).
     :return: collection of `CowSwapTrader` on `network` at `block_number`
     """
+    network_file = load_from.filename(network)
+    try:
+        return CowSwapTrader.load_from(network_file)
+    except FileNotFoundError:
+        print(f"file at {network_file.name} not found. Fetching from Dune")
+
     # Need to implement load from.
     data_set = dune.fetch(
         query_filepath="./queries/generic_trader_data.sql",

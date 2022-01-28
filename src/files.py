@@ -70,7 +70,7 @@ class TraderFiles:
     consolation_allocation = File("allocations-trader-consolation.csv")
     consolation_trader = File("combined-consolation-trader-data.csv")
     primary_trader = File("combined-primary-trader-data.csv")
-    traders = NetworkFile("trader-data.csv")
+    traders = NetworkFile("trader-data.csv", path='./data')
     user_options = File("combined-user-options.csv")
 
 
