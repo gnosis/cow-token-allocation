@@ -343,9 +343,11 @@ where all of these parameters are defined in the code.
 
 ## Consolation Trader Allocation
 
-Users not meeting the Primary criteria, but satisfying the eligible volume condition.
-That is any user having made at least 1000 USD in eligible trading volume. There are no
-weight factors assigned to this category, the 2M tokens has been distributed equally to
+Users not meeting the Primary criteria, but satisfying either
+1. The eligible volume condition (i.e. at least 1000 USD in eligible trading volume) OR
+2. Having made at least 5 trades.
+
+There are no weight factors assigned to this category, the 2M tokens has been distributed equally to
 each of the eligible recipients.
 
 ### Trader Data Queries
