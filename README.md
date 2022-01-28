@@ -79,8 +79,8 @@ The allocation files are committed to this repo and can be viewed here:
 # Allocations
 
 An Allocation (represented in the project as a `MerkleLeaf`), attributed to each
-eligible account, consists of several categories briefly define here (some of which
-will be elaborated upon in their own section):
+eligible account, consists of several categories briefly define here (some of which will
+be elaborated upon in their own section):
 
 1. Airdrop: Consists of the combined sum of allocations for GNO holders and CoWSwap
    Users (outlined below)
@@ -444,6 +444,12 @@ python -m src.main
 
 **NOTE** Entire allocation generation from scratch takes about 15 minutes.
 
+_DISCLAIMER_ Due to reliance on a non-deterministic price feed in the trader query we
+are experiencing infinitesimal difference from one run to the next. While the results
+will turn out marginally different the allocation files are not yet deterministic. We
+are toward fixing this, but will rely on the committed file here at the time of
+deployment even if this non-determinism has not been resolved.
+
 ### Verifying results
 
 If you generate the output files yourself, you can compare the output files with:
@@ -451,14 +457,6 @@ If you generate the output files yourself, you can compare the output files with
 ```shell
 $ diff out/allocations-mainnet.csv allocations-mainnet.csv 
 $ diff out/allocations-gchain.csv allocations-gchain.csv 
-```
-
-or check that the sha hashes agree
-
-```shell
-$ shasum -a 256 allocations{-mainnet,-gchain}.csv 
-382cbdf4ca33c3c5c6c580d1b5a5384e34f513218b32f8d15a1669f3d4ce9277  allocations-mainnet.csv
-5db5e19335ac7b661c6bd1c7705f36aeff05402d720878c51199c25d46c97c81  allocations-gchain.csv
 ```
 
 Note that every file in this repo runs as a standalone script for its intended purpose.
