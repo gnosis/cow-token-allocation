@@ -374,6 +374,24 @@ interface at
 
 For a full list of POAP weight factors see [here](./data/poap-holders/token-categories.csv).
 
+
+| Event                                                         |                                                                                                      Token ID(s)                                                                                                       | Weight Factor |
+|---------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|--------------:|
+| Kaffeekränzchen low attendance                                |    [4437](data/poap-holders/token-4437.csv), [4813](data/poap-holders/token-4813.csv), [5182](data/poap-holders/token-5182.csv), [6457](data/poap-holders/token-6457.csv), [6887](data/poap-holders/token-6887.csv)    |             4 |
+| Kaffeekränzchen medium attendance                             |                                                                   [7330](data/poap-holders/token-7330.csv), [8092](data/poap-holders/token-8092.csv)                                                                   |             2 |
+| Kaffeekränzchen high attendance                               |                                                                                        [8824](data/poap-holders/token-8824.csv)                                                                                        |             1 |
+| Kaffeekränzchen challenge winners                             |                     [13346](data/poap-holders/token-13346.csv), [15296](data/poap-holders/token-15296.csv), [15739](data/poap-holders/token-15739.csv), [21839](data/poap-holders/token-21839.csv)                     |            20 |
+| UX Research Participants                                      |                                                                                       [11743](data/poap-holders/token-11743.csv)                                                                                       |            40 |
+| Squid                                                         |                                                                                       [15311](data/poap-holders/token-15311.csv)                                                                                       |            20 |
+| CowStars                                                      | [6739](data/poap-holders/token-6739.csv), [9533](data/poap-holders/token-9533.csv), [12654](data/poap-holders/token-12654.csv), [18465](data/poap-holders/token-18465.csv), [22201](data/poap-holders/token-22201.csv) |           100 |
+| SCdeploymentMainnet                                           |                                                                                        [6102](data/poap-holders/token-6102.csv)                                                                                        |             2 |
+| SCdeploymentGnoChain                                          |                                                                                        [6103](data/poap-holders/token-6103.csv)                                                                                        |             2 |
+| Picasso Winners                                               |                                                                                       [12420](data/poap-holders/token-12420.csv)                                                                                       |           100 |
+| [AlphaUsersRetainedMainnet](https://dune.xyz/queries/356227)  |                                                                                                          N/A                                                                                                           |            16 |
+| [AlphaUsersRetainedGnoChain](https://dune.xyz/queries/356237) |                                                                                                          N/A                                                                                                           |             4 |
+
+
+
 Unfortunately, due to an exploit in the POAP.xyz we were not able to automatically
 recover the correct POAP token holders, so we have fallen back on our own, internal,
 hard coded list of eligible token recipients.
