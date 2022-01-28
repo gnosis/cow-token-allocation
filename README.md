@@ -60,6 +60,7 @@ To, briefly summarize the approach we;
 The allocation file is
 available [here](https://docs.google.com/spreadsheets/d/1xDjH8xA3hmKCgtEmSTwLSBrNMgK3SOyBeZ1inat2TqE/edit#gid=433884462)
 on Google Drive but can also be found here in this repository as well
+
 - [Mainnet Allocations](allocations-mainnet.csv)
 - [Gnosis Chain Allocations](allocations-gchain.csv)
 
@@ -344,11 +345,12 @@ where all of these parameters are defined in the code.
 ## Consolation Trader Allocation
 
 Users not meeting the Primary criteria, but satisfying either
+
 1. The eligible volume condition (i.e. at least 1000 USD in eligible trading volume) OR
 2. Having made at least 5 trades.
 
-There are no weight factors assigned to this category, the 2M tokens has been distributed equally to
-each of the eligible recipients.
+There are no weight factors assigned to this category, the 2M tokens has been
+distributed equally to each of the eligible recipients.
 
 ### Trader Data Queries
 
@@ -374,8 +376,8 @@ interface at
 2. POAP Holders: The following table outlines the considered POAPs for this allocation
    along with their weight factors
 
-For a full list of POAP weight factors see [here](./data/poap-holders/token-categories.csv).
-
+For a full list of POAP weight factors
+see [here](./data/poap-holders/token-categories.csv).
 
 | Event                                                         |                                                                                                      Token ID(s)                                                                                                       | Weight Factor |
 |---------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|--------------:|
@@ -392,8 +394,6 @@ For a full list of POAP weight factors see [here](./data/poap-holders/token-cate
 | [AlphaUsersRetainedMainnet](https://dune.xyz/queries/356227)  |                                                                                                          N/A                                                                                                           |            16 |
 | [AlphaUsersRetainedGnoChain](https://dune.xyz/queries/356237) |                                                                                                          N/A                                                                                                           |             4 |
 
-
-
 Unfortunately, due to an exploit in the POAP.xyz we were not able to automatically
 recover the correct POAP token holders, so we have fallen back on our own, internal,
 hard coded list of eligible token recipients.
@@ -408,6 +408,7 @@ python3 -m venv env
 source ./env/bin/activate
 pip install -r requirements.txt
 cp .env.sample .env
+source .env
 ```
 
 Fill out your Dune credentials in the `.env` file. The Dune user and password are
@@ -429,7 +430,7 @@ To generate the entire allocation from scratch run
 python -m src.main
 ```
 
-**NOTE** Entire allocation generation from scratch takes about 13 minutes.
+**NOTE** Entire allocation generation from scratch takes about 15 minutes.
 
 ### Verifying results
 
@@ -447,9 +448,6 @@ $ shasum -a 256 allocations{-mainnet,-gchain}.csv
 dd3baf2a3a9c687b192805a576f193a89edfaba24237bd5ad3acae6980028b36  allocations-mainnet.csv
 8841968ca435e70b105dba158f2ee4c32a09634ff82f8967cfa9e2a6aa3c0cda  allocations-gchain.csv
 ```
-
-
-
 
 Note that every file in this repo runs as a standalone script for its intended purpose.
 For example, to fetch GNO token holders run
