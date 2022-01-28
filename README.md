@@ -52,7 +52,7 @@ To, briefly summarize the approach we;
    Pool's holdings (from step 1)
 6. Combine all of these values together to generate combined (Mainnet and GnosisChain
    CSV) representing total GNO holdings across all eligible platforms.
-7. Fetch and Merge Trader Data from both networks
+7. Fetch and merge trader data from both networks
 8. Filter the combined Trader data by the eligibility criteria
    outlined [below](#cowswap-users)
 9. Transform the holder and user data into allocations in their respective categories.
