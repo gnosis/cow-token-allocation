@@ -18,6 +18,6 @@ if __name__ == '__main__':
     }
     assert excluded_accounts & allocation_accounts == only_exceptions
     unallocated = EXPECTED_TOTAL - allocations.total_allocation_wei()
-    assert unallocated == 6900049544, f"unexpected unallocated amount: {unallocated}"
+    assert unallocated == 6900034786, f"unexpected unallocated amount: {unallocated}"
     print(allocations)
     print("Allocation Generation Complete! Have a nice day.")

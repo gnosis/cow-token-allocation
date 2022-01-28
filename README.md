@@ -445,8 +445,8 @@ or check that the sha hashes agree
 
 ```shell
 $ shasum -a 256 allocations{-mainnet,-gchain}.csv 
-dd3baf2a3a9c687b192805a576f193a89edfaba24237bd5ad3acae6980028b36  allocations-mainnet.csv
-8841968ca435e70b105dba158f2ee4c32a09634ff82f8967cfa9e2a6aa3c0cda  allocations-gchain.csv
+c2c290db74e474f6e1f1d94550fea6eb0b1596a419793cc866b3c0feb8562e28  allocations-mainnet.csv
+b91bfa4cd33b477fe3b9cfed1cc6ab4f0400faa270e8451d2a19d11442c38658  allocations-gchain.csv
 ```
 
 Note that every file in this repo runs as a standalone script for its intended purpose.
