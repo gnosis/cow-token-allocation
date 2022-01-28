@@ -50,16 +50,28 @@ To, briefly summarize the approach we;
 4. Fetch Gnosis Chain Depositors
 5. Compute GNO holdings of LP providers based on share % in correspondence with the
    Pool's holdings (from step 1)
-6. Combine all of these values together to generate Mainnet and GnosisChain CSV
-   allocation files with columns
+6. Combine all of these values together to generate combined (Mainnet and GnosisChain
+   CSV) representing total GNO holdings across all eligible platforms.
+7. Fetch and Merge Trader Data from both networks
+8. Filter the combined Trader data by the eligibility criteria
+   outlined [below](#cowswap-users)
+9. Transform the holder and user data into allocations in their respective categories.
+10. Merge allocations into a combined, universal allocation list.
+11. The allocations are then split across both networks based loosely on the criteria
+    that Allocations with an Airdrop claim less than 10K vCoW tokens will be eligible
+    for claim on Gnosis Chain. Above 10K claims are on Mainnet. Note that we can only
+    perform this splitting criteria to Externally owned accounts (since smart contracts
+    such as Gnosis Safe are not "multi-network compatible").
+12. As a final step, we append Advisor, Investor and Team allocations to the bottom of
+    the mainnet allocation file.
+
+Resulting allocation files have the following columns:
 
 ```
 [ Account | Airdrop | GnoOption | UserOption | Investor | Team | Advisor ]
 ```
 
-The allocation file is
-available [here](https://docs.google.com/spreadsheets/d/1xDjH8xA3hmKCgtEmSTwLSBrNMgK3SOyBeZ1inat2TqE/edit#gid=433884462)
-on Google Drive but can also be found here in this repository as well
+The allocation files are committed to this repo and can be viewed here:
 
 - [Mainnet Allocations](allocations-mainnet.csv)
 - [Gnosis Chain Allocations](allocations-gchain.csv)
