@@ -136,18 +136,21 @@ The total allocations to each category are
 ```
 ======================
 Allocation Counts
-   Mainnet:       1470
-   Gnosis Chain: 42568
+   Mainnet:       1465
+   Gnosis Chain: 53750
 ----------------------
 Category Totals
    Airdrop:     150.0M
-   GNO Option:   50.0M
+   Gno Option:   50.0M
    User Option:  50.0M
    Investor:    100.0M
    Advisory:    106.1M
    Team:         99.3M
 ----------------------
 Grand Total:    555.3M
+----------------------
+Unallocated Amount
+        6900034565 WEI
 ======================
 ```
 
