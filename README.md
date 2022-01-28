@@ -60,6 +60,7 @@ To, briefly summarize the approach we;
 The allocation file is
 available [here](https://docs.google.com/spreadsheets/d/1xDjH8xA3hmKCgtEmSTwLSBrNMgK3SOyBeZ1inat2TqE/edit#gid=433884462)
 on Google Drive but can also be found here in this repository as well
+
 - [Mainnet Allocations](allocations-mainnet.csv)
 - [Gnosis Chain Allocations](allocations-gchain.csv)
 
@@ -290,7 +291,7 @@ This allocation has been split up into three categories:
 3. Community: This category includes both of POAP holders and a special allocation to
    our alpha contract traders.
 
-The 50M tokens has been partitioned as (45M, 2M, 3M) into each of the above three
+The 50M tokens has been partitioned as (44M, 3M, 3M) into each of the above three
 categories respectively.
 
 We elaborate on each of the three categories in their own sections below.
@@ -343,10 +344,13 @@ where all of these parameters are defined in the code.
 
 ## Consolation Trader Allocation
 
-Users not meeting the Primary criteria, but satisfying the eligible volume condition.
-That is any user having made at least 1000 USD in eligible trading volume. There are no
-weight factors assigned to this category, the 2M tokens has been distributed equally to
-each of the eligible recipients.
+Users not meeting the Primary criteria, but satisfying either
+
+1. The eligible volume condition (i.e. at least 1000 USD in eligible trading volume) OR
+2. Having made at least 5 trades.
+
+There are no weight factors assigned to this category, the 3M tokens has been
+distributed equally to each of the eligible recipients.
 
 ### Trader Data Queries
 
@@ -372,19 +376,23 @@ interface at
 2. POAP Holders: The following table outlines the considered POAPs for this allocation
    along with their weight factors
 
+For a full list of POAP weight factors
+see [here](./data/poap-holders/token-categories.csv).
+
 | Event                                                         |                                                                                                      Token ID(s)                                                                                                       | Weight Factor |
 |---------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|--------------:|
-| Kaffeekränzchen low attendance                                |    [4437](data/poap-holders/token-4437.csv), [4813](data/poap-holders/token-4813.csv), [5182](data/poap-holders/token-5182.csv), [6457](data/poap-holders/token-6457.csv), [6887](data/poap-holders/token-6887.csv)    |             2 |
-| Kaffeekränzchen high attendance                               |                                              [7330](data/poap-holders/token-7330.csv), [8092](data/poap-holders/token-8092.csv), [8824](data/poap-holders/token-8824.csv)                                              |             1 |
-| Kaffeekränzchen challenge winners                             |                     [13346](data/poap-holders/token-13346.csv), [15296](data/poap-holders/token-15296.csv), [15739](data/poap-holders/token-15739.csv), [21839](data/poap-holders/token-21839.csv)                     |            10 |
-| UX Research Participants                                      |                                                                                       [11743](data/poap-holders/token-11743.csv)                                                                                       |            20 |
-| Squid                                                         |                                                                                       [15311](data/poap-holders/token-15311.csv)                                                                                       |            10 |
-| CowStars                                                      | [6739](data/poap-holders/token-6739.csv), [9533](data/poap-holders/token-9533.csv), [12654](data/poap-holders/token-12654.csv), [18465](data/poap-holders/token-18465.csv), [22201](data/poap-holders/token-22201.csv) |            50 |
-| SCdeploymentMainnet                                           |                                                                                        [6102](data/poap-holders/token-6102.csv)                                                                                        |             4 |
-| SCdeploymentGnoChain                                          |                                                                                        [6103](data/poap-holders/token-6103.csv)                                                                                        |             1 |
-| Picasso Winners                                               |                                                                                       [12420](data/poap-holders/token-12420.csv)                                                                                       |            50 |
-| [AlphaUsersRetainedMainnet](https://dune.xyz/queries/356227)  |                                                                                                          N/A                                                                                                           |             8 |
-| [AlphaUsersRetainedGnoChain](https://dune.xyz/queries/356237) |                                                                                                          N/A                                                                                                           |             2 |
+| Kaffeekränzchen low attendance                                |    [4437](data/poap-holders/token-4437.csv), [4813](data/poap-holders/token-4813.csv), [5182](data/poap-holders/token-5182.csv), [6457](data/poap-holders/token-6457.csv), [6887](data/poap-holders/token-6887.csv)    |             4 |
+| Kaffeekränzchen medium attendance                             |                                                                   [7330](data/poap-holders/token-7330.csv), [8092](data/poap-holders/token-8092.csv)                                                                   |             2 |
+| Kaffeekränzchen high attendance                               |                                                                                        [8824](data/poap-holders/token-8824.csv)                                                                                        |             1 |
+| Kaffeekränzchen challenge winners                             |                     [13346](data/poap-holders/token-13346.csv), [15296](data/poap-holders/token-15296.csv), [15739](data/poap-holders/token-15739.csv), [21839](data/poap-holders/token-21839.csv)                     |            20 |
+| UX Research Participants                                      |                                                                                       [11743](data/poap-holders/token-11743.csv)                                                                                       |            40 |
+| Squid                                                         |                                                                                       [15311](data/poap-holders/token-15311.csv)                                                                                       |            20 |
+| CowStars                                                      | [6739](data/poap-holders/token-6739.csv), [9533](data/poap-holders/token-9533.csv), [12654](data/poap-holders/token-12654.csv), [18465](data/poap-holders/token-18465.csv), [22201](data/poap-holders/token-22201.csv) |           100 |
+| SCdeploymentMainnet                                           |                                                                                        [6102](data/poap-holders/token-6102.csv)                                                                                        |             2 |
+| SCdeploymentGnoChain                                          |                                                                                        [6103](data/poap-holders/token-6103.csv)                                                                                        |             2 |
+| Picasso Winners                                               |                                                                                       [12420](data/poap-holders/token-12420.csv)                                                                                       |           100 |
+| [AlphaUsersRetainedMainnet](https://dune.xyz/queries/356227)  |                                                                                                          N/A                                                                                                           |            16 |
+| [AlphaUsersRetainedGnoChain](https://dune.xyz/queries/356237) |                                                                                                          N/A                                                                                                           |             4 |
 
 Unfortunately, due to an exploit in the POAP.xyz we were not able to automatically
 recover the correct POAP token holders, so we have fallen back on our own, internal,
@@ -400,6 +408,7 @@ python3 -m venv env
 source ./env/bin/activate
 pip install -r requirements.txt
 cp .env.sample .env
+source .env
 ```
 
 Fill out your Dune credentials in the `.env` file. The Dune user and password are
@@ -421,7 +430,7 @@ To generate the entire allocation from scratch run
 python -m src.main
 ```
 
-**NOTE** Entire allocation generation from scratch takes about 13 minutes.
+**NOTE** Entire allocation generation from scratch takes about 15 minutes.
 
 ### Verifying results
 
@@ -436,12 +445,9 @@ or check that the sha hashes agree
 
 ```shell
 $ shasum -a 256 allocations{-mainnet,-gchain}.csv 
-dd3baf2a3a9c687b192805a576f193a89edfaba24237bd5ad3acae6980028b36  allocations-mainnet.csv
-8841968ca435e70b105dba158f2ee4c32a09634ff82f8967cfa9e2a6aa3c0cda  allocations-gchain.csv
+c2c290db74e474f6e1f1d94550fea6eb0b1596a419793cc866b3c0feb8562e28  allocations-mainnet.csv
+b91bfa4cd33b477fe3b9cfed1cc6ab4f0400faa270e8451d2a19d11442c38658  allocations-gchain.csv
 ```
-
-
-
 
 Note that every file in this repo runs as a standalone script for its intended purpose.
 For example, to fetch GNO token holders run
