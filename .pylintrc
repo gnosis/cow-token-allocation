@@ -1,0 +1,6 @@
+[MASTER]
+disable=fixme,missing-module-docstring,missing-class-docstring,missing-function-docstring
+
+[SIMILARITIES]
+# Ignore imports when computing similarities.
+ignore-imports=yes
