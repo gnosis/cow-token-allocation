@@ -447,7 +447,7 @@ python -m src.main
 _DISCLAIMER_ Due to reliance on a non-deterministic price feed in the trader query we
 are experiencing infinitesimal difference from one run to the next. While the results
 will turn out marginally different the allocation files are not yet deterministic. We
-are toward fixing this, but will rely on the committed file here at the time of
+are working toward fixing this, but will rely on the committed file here at the time of
 deployment even if this non-determinism has not been resolved.
 
 ### Verifying results
