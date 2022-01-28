@@ -291,7 +291,7 @@ This allocation has been split up into three categories:
 3. Community: This category includes both of POAP holders and a special allocation to
    our alpha contract traders.
 
-The 50M tokens has been partitioned as (45M, 2M, 3M) into each of the above three
+The 50M tokens has been partitioned as (44M, 3M, 3M) into each of the above three
 categories respectively.
 
 We elaborate on each of the three categories in their own sections below.
@@ -349,7 +349,7 @@ Users not meeting the Primary criteria, but satisfying either
 1. The eligible volume condition (i.e. at least 1000 USD in eligible trading volume) OR
 2. Having made at least 5 trades.
 
-There are no weight factors assigned to this category, the 2M tokens has been
+There are no weight factors assigned to this category, the 3M tokens has been
 distributed equally to each of the eligible recipients.
 
 ### Trader Data Queries
