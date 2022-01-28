@@ -79,7 +79,7 @@ The allocation files are committed to this repo and can be viewed here:
 # Allocations
 
 An Allocation (represented in the project as a `MerkleLeaf`), attributed to each
-eligible account, consists of several categories we briefly defined here (some of which
+eligible account, consists of several categories briefly define here (some of which
 will be elaborated upon in their own section):
 
 1. Airdrop: Consists of the combined sum of allocations for GNO holders and CoWSwap
