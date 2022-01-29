@@ -114,14 +114,18 @@ class CowSwapTrader(Account):
         self.allocation_tier = self._compute_allocation_tier()
 
     @classmethod
-    def load_from(cls, load_file: File) -> dict[str, CowSwapTrader]:
+    def load_from(
+            cls,
+            load_file: File,
+            column_name: str = "account"
+    ) -> dict[str, CowSwapTrader]:
         """Loads liquidity proportions from filename"""
         print(f"Loading Trader Data from {load_file.name}")
         results = {}
         with open(load_file.filename(), 'r', encoding='utf-8') as file:
             dict_reader = csv.DictReader(file)
             for row in dict_reader:
-                account = row['account']
+                account = row[column_name]
                 results[account] = cls(
                     account=account,
                     eligible_volume=int(row['eligible_volume']),
