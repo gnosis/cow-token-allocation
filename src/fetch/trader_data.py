@@ -114,10 +114,9 @@ class CowSwapTrader(Account):
         self.allocation_tier = self._compute_allocation_tier()
 
     @classmethod
-    def load_from(
+    def load_from_file(
             cls,
             load_file: File,
-            column_name: str = "account"
     ) -> dict[str, CowSwapTrader]:
         """Loads liquidity proportions from filename"""
         print(f"Loading Trader Data from {load_file.name}")
@@ -125,7 +124,7 @@ class CowSwapTrader(Account):
         with open(load_file.filename(), 'r', encoding='utf-8') as file:
             dict_reader = csv.DictReader(file)
             for row in dict_reader:
-                account = row[column_name]
+                account = row['account']
                 results[account] = cls(
                     account=account,
                     eligible_volume=int(row['eligible_volume']),
@@ -241,7 +240,7 @@ def fetch_trader_data(
     """
     network_file = load_from.filename(network)
     try:
-        return CowSwapTrader.load_from(network_file)
+        return CowSwapTrader.load_from_file(network_file)
     except FileNotFoundError:
         print(f"file at {network_file.name} not found. Fetching from Dune")
 
