@@ -9,7 +9,7 @@ from src.utils.file import write_to_csv
 @dataclass
 class NativeTransfer:
     receiver: str
-    value: float
+    amount: float
     token_type: str = "native"
     token_address: Optional[str] = None
     id: Optional[int] = None
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         transfers.append(
             NativeTransfer(
                 receiver=account.account,
-                value=0.1
+                amount=0.1
             )
         )
 
