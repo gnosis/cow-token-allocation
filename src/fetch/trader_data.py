@@ -114,10 +114,7 @@ class CowSwapTrader(Account):
         self.allocation_tier = self._compute_allocation_tier()
 
     @classmethod
-    def load_from_file(
-            cls,
-            load_file: File,
-    ) -> dict[str, CowSwapTrader]:
+    def load_from_file(cls, load_file: File) -> dict[str, CowSwapTrader]:
         """Loads liquidity proportions from filename"""
         print(f"Loading Trader Data from {load_file.name}")
         results = {}
