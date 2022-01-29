@@ -21,11 +21,13 @@ def derive_allocations(
     try:
         return IndexedAllocations.load_from_file(load_from.holder_allocation)
     except FileNotFoundError:
-        print(f"file {load_from.holder_allocation} not found, fetching from Dune")
+        print(f"file {load_from.holder_allocation} not found, "
+              f"building from network holder data")
 
     combined_holders = generate_combined_holders(dune, load_from.holder_data)
 
     eligible_supply = sum(holder.total_gno for holder in combined_holders)
+    print(f"Total eligible GNO considered {eligible_supply / 1e18}")
     allocations = [holder.to_allocation(eligible_supply) for holder in combined_holders]
 
     total_allocated = sum(h.amount for h in allocations)
