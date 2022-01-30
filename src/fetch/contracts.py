@@ -8,7 +8,9 @@ import requests
 
 # pylint: disable=too-few-public-methods
 from src.files import NetworkFile
+from src.models import Account
 from src.utils.data import File
+from src.utils.file import write_to_csv
 
 
 class EvmAccountInfo:
@@ -99,10 +101,9 @@ class EvmAccountInfo:
             partition = addresses[index:index + self.max_batch_size]
             results |= self._limited_is_contract(partition)
 
-        confirmed_contracts = sorted([k for k, v in results.items() if v])
+        confirmed_contracts = sorted([Account(k) for k, v in results.items() if v])
         print(f"found {len(confirmed_contracts)} contracts, writing to file")
-        with open(load_file.filename(), 'w', encoding='utf-8') as file:
-            file.write('\n'.join(confirmed_contracts))
+        write_to_csv(data_list=confirmed_contracts, outfile=load_file)
         return results
 
     def _limited_balances(self, addresses: list[str]) -> dict[str, int]:
@@ -118,7 +119,8 @@ class EvmAccountInfo:
         results = {}
         for result_dict in response.json():
             try:
-                results[addresses[result_dict['id']]] = int(result_dict['result'], base=16)
+                account = addresses[result_dict['id']]
+                results[account] = int(result_dict['result'], base=16)
             except KeyError as err:
                 raise IOError(
                     f"Request for address \"{addresses[result_dict['id']]}\" "
@@ -134,12 +136,11 @@ class EvmAccountInfo:
             partition = self.addresses[index:index + self.max_batch_size]
             results |= self._limited_balances(partition)
 
-        null_balances = sorted([k for k, v in results.items() if v == 0])
+        null_balances = sorted([Account(k) for k, v in results.items() if v == 0])
         print(f"found {len(null_balances)} accounts will zero balance, writing to file")
-        balance_file = self.null_balance_file.filename(self.network).filename()
-        with open(balance_file, 'w', encoding='utf-8') as file:
-            file.write('\n'.join(null_balances))
-        return set(null_balances)
+        balance_file = self.null_balance_file.filename(self.network)
+        write_to_csv(data_list=null_balances, outfile=balance_file)
+        return set(a.account for a in null_balances)
 
 
 if __name__ == '__main__':

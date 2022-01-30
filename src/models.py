@@ -19,6 +19,9 @@ class Account:
     def __hash__(self):
         return self.account.__hash__()
 
+    def __lt__(self, other: Account):
+        return self.account < other.account
+
     @classmethod
     def load_from(cls, load_file: File, column_name: str = "account") -> set[Account]:
         """Loads Accounts from filename"""
