@@ -8,10 +8,12 @@ import requests
 
 # pylint: disable=too-few-public-methods
 from src.files import NetworkFile
+from src.models import Account
 from src.utils.data import File
+from src.utils.file import write_to_csv
 
 
-class ContractDetector:
+class EvmAccountInfo:
     """
     Class consisting of 3 parameters to determine if the addresses are contracts.
     :param max_batch_size: max number of queries to batch into a single rpc call
@@ -31,6 +33,7 @@ class ContractDetector:
         self.network = network
         # de-duplicate to reduce unnecessary queries
         self.addresses = list(set(addresses))
+        self.null_balance_file = NetworkFile("null-balances.csv")
 
     def _limited_is_contract(self, addresses: list[str]) -> dict[str, bool]:
         """
@@ -78,7 +81,7 @@ class ContractDetector:
             contracts = set(txt_file.read().splitlines())
         return {addr: addr in contracts for addr in self.addresses}
 
-    def results(self, load_from: NetworkFile) -> dict[str, bool]:
+    def contracts(self, load_from: NetworkFile) -> dict[str, bool]:
         """
         Allows us to instantiate the code getter without actually fetching
         results are only fetched upon call to this method.
@@ -98,11 +101,46 @@ class ContractDetector:
             partition = addresses[index:index + self.max_batch_size]
             results |= self._limited_is_contract(partition)
 
-        confirmed_contracts = sorted([k for k, v in results.items() if v])
+        confirmed_contracts = sorted([Account(k) for k, v in results.items() if v])
         print(f"found {len(confirmed_contracts)} contracts, writing to file")
-        with open(load_file.filename(), 'w', encoding='utf-8') as file:
-            file.write('\n'.join(confirmed_contracts))
+        write_to_csv(data_list=confirmed_contracts, outfile=load_file)
         return results
+
+    def _limited_balances(self, addresses: list[str]) -> dict[str, int]:
+        request_data = []
+        for index, eth_address in enumerate(addresses):
+            request_data.append({
+                "jsonrpc": "2.0",
+                "method": "eth_getBalance",
+                "params": [eth_address, "latest"],
+                "id": index
+            })
+        response = requests.post(self.node_url, json=request_data)
+        results = {}
+        for result_dict in response.json():
+            try:
+                account = addresses[result_dict['id']]
+                results[account] = int(result_dict['result'], base=16)
+            except KeyError as err:
+                raise IOError(
+                    f"Request for address \"{addresses[result_dict['id']]}\" "
+                    f"failed with response {result_dict}"
+                ) from err
+        return results
+
+    def get_null_balances(self) -> set[str]:
+        print(f"Fetching balances at {len(self.addresses)} addresses on "
+              f"{self.network} (this may take a while)...")
+        results = {}
+        for index in range(0, len(self.addresses), self.max_batch_size):
+            partition = self.addresses[index:index + self.max_batch_size]
+            results |= self._limited_balances(partition)
+
+        null_balances = sorted([Account(k) for k, v in results.items() if v == 0])
+        print(f"found {len(null_balances)} accounts will zero balance, writing to file")
+        balance_file = self.null_balance_file.filename(self.network)
+        write_to_csv(data_list=null_balances, outfile=balance_file)
+        return set(a.account for a in null_balances)
 
 
 if __name__ == '__main__':
@@ -127,12 +165,12 @@ if __name__ == '__main__':
         default=10
     )
     args = parser.parse_args()
-    contract_detector = ContractDetector(
+    contract_detector = EvmAccountInfo(
         max_batch_size=args.request_batch_size,
         node_url=args.node_url,
         addresses=args.addresses,
         network="mainnet",
     )
-    contract_dict = contract_detector.results(NetworkFile("contracts.txt"))
+    contract_dict = contract_detector.contracts(NetworkFile("contracts.txt"))
     for address, result in contract_dict.items():
         print(f"is_contract({address}): {result}")

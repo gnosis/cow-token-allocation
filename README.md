@@ -494,3 +494,17 @@ python -m src.fetch_lp_holders
 ```
 
 which will result in files `./out/{network}-lp-holders.csv`.
+
+## Gnosis Chain Transfer File
+
+As a final step to the allocation process, we have decided to distribute 0.1 xDAI to all
+externally owned accounts with zero balance eligible for claim on Gnosis Chain. This is
+intended to provide funds for transaction cost execution to those who may not already be
+users on the network.
+
+This transfer file can be generated (from the `allocations-gchain.csv`) by running the
+following script:
+
+```shell
+python -m scripts.gchain_transfer_file  
+```

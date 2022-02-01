@@ -35,7 +35,7 @@ from dataclasses import dataclass
 
 from src.constants import EXPECTED_TOTAL, ANONYMOUS_INVESTMENTS, WEI_IN_ETH
 from src.dune_analytics import DuneAnalytics
-from src.fetch.contracts import ContractDetector
+from src.fetch.contracts import EvmAccountInfo
 from src.files import AllocationFiles
 from src.generate.merkle_data import MerkleLeaf, AllocationOption
 from src.utils.data import write_to_csv
@@ -279,11 +279,11 @@ def fetch_and_split_allocations(
             network: {
                 address
                 for address, is_contract in
-                ContractDetector(
+                EvmAccountInfo(
                     node_url=NODE_URL[network],
                     addresses=[a.Account for a in fetched_allocations],
                     network=network
-                ).results(
+                ).contracts(
                     load_from=AllocationFiles.contracts
                 ).items()
                 if is_contract

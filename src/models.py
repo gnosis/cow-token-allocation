@@ -19,14 +19,17 @@ class Account:
     def __hash__(self):
         return self.account.__hash__()
 
+    def __lt__(self, other: Account):
+        return self.account < other.account
+
     @classmethod
-    def load_from(cls, load_file: File) -> set[Account]:
+    def load_from(cls, load_file: File, column_name: str = "account") -> set[Account]:
         """Loads Accounts from filename"""
         print(f"Loading Accounts from {load_file.name}")
         with open(load_file.filename(), 'r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
             results = {
-                Account(row['account']) for row in reader
+                Account(row[column_name]) for row in reader
             }
         print(f"Loaded {len(results)} {load_file.name} records")
         return results
