@@ -113,6 +113,12 @@ class CowSwapTrader(Account):
         self.first_trade = first_trade
         self.last_trade = last_trade
         self.allocation_tier = self._compute_allocation_tier()
+        days_between = self.days_between_first_and_last() or -1
+        self.eligibility_criteria = [
+            self.eligible_volume >= TRADER_PARAMETERS.min_volume,
+            self.num_trades >= TRADER_PARAMETERS.primary_min_trades,
+            days_between >= TRADER_PARAMETERS.days_between,
+        ]
 
     @classmethod
     def load_from_file(cls, load_file: File) -> dict[str, CowSwapTrader]:
@@ -155,29 +161,32 @@ class CowSwapTrader(Account):
         Used to merge gchain and mainnet trader data.
         """
         assert self.account == other.account, "Can't merge different traders!"
-
+        try:
+            first_trade = min(self.first_trade, other.first_trade)
+        except TypeError:
+            first_trade = None
+        try:
+            last_trade = max(self.last_trade, other.last_trade)
+        except TypeError:
+            last_trade = None
         return CowSwapTrader(
             account=self.account,
             eligible_volume=self.eligible_volume + other.eligible_volume,
             num_trades=self.num_trades + other.num_trades,
-            first_trade=min(self.first_trade, other.first_trade),
-            last_trade=max(self.last_trade, other.last_trade)
+            first_trade=first_trade,
+            last_trade=last_trade,
         )
 
     def is_eligible(self) -> bool:
         """
         :return: True if record meets eligibility criteria defined by TRADER_PARAMETERS.
         """
-        eligibility_criteria = [
-            self.eligible_volume >= TRADER_PARAMETERS.min_volume,
-            self.num_trades >= TRADER_PARAMETERS.primary_min_trades,
-            self.days_between_first_and_last() >= TRADER_PARAMETERS.days_between,
-        ]
-        if all(eligibility_criteria) and self.allocation_tier not in TRADING_TIER_FACTORS:
+        is_eligible = all(self.eligibility_criteria)
+        if is_eligible and self.allocation_tier not in TRADING_TIER_FACTORS:
             raise ValueError(
                 "Trader meets eligibility criteria, but has invalid allocation tier!"
             )
-        return all(eligibility_criteria)
+        return is_eligible
 
     def to_user_option(
             self,
@@ -233,6 +242,43 @@ class CowSwapTrader(Account):
             first_trade=None,
             last_trade=None,
         )
+
+    def __str__(self):
+        results = f"  eligible volume:   {self.eligible_volume}\n" \
+                  f"  num trades:        {self.num_trades}\n" \
+                  f"  first trade date:  {self.first_trade}\n" \
+                  f"  last trade date:   {self.last_trade}\n" \
+                  f"  days between:      {self.days_between_first_and_last()}"
+        if not self.is_eligible():
+            volume, trades, days = self.eligibility_criteria
+            results += f"Trading Criteria Met\n" \
+                       f"  volume: {volume}\n" \
+                       f"  trades: {trades}\n" \
+                       f"  days:   {days}"
+        return results
+
+    @classmethod
+    def load_and_merge_network_trader_data(
+            cls,
+            mainnet_file: File,
+            gchain_file: File
+    ) -> dict[str, CowSwapTrader]:
+        mainnet_traders = CowSwapTrader.load_from(mainnet_file)
+        gchain_traders = CowSwapTrader.load_from(gchain_file)
+        results = {}
+        for account in mainnet_traders.keys() | gchain_traders.keys():
+            mainnet_entry = mainnet_traders.pop(
+                account,
+                CowSwapTrader.default_for_account(account)
+            )
+            gchain_entry = gchain_traders.pop(
+                account,
+                CowSwapTrader.default_for_account(account)
+            )
+
+            combined_entry = mainnet_entry.merge(gchain_entry)
+            results[account] = combined_entry
+        return results
 
 
 def fetch_trader_data(

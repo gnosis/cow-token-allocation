@@ -1,5 +1,6 @@
 import argparse
 from enum import Enum
+from typing import Optional
 
 from src.fetch.combined_holders import CombinedGnoHolder
 from src.fetch.trader_data import CowSwapTrader
@@ -25,22 +26,15 @@ class TraderDetails:
         self.allocations = allocations
         self.allocation_type = allocation_type
 
-    def account_detail_string(self, account: str) -> str:
+    def account_detail_string(self, account: str) -> Optional[str]:
         trader_activity = self.data.get(account)
         if trader_activity is None:
             return None
         allocation = self.allocations.get(account)
-        days_between = trader_activity.days_between_first_and_last()
-        return f"""
-  eligible volume:   {trader_activity.eligible_volume}
-  num trades:        {trader_activity.num_trades}
-  first trade date:  {trader_activity.first_trade}
-  last trade date:   {trader_activity.last_trade}
-  days between:      {days_between}
---------------------------------------------
-  allocation type    {str(self.allocation_type)}
-  trader allocation: {allocation.amount / 1e18}\r
-"""
+        return f"{trader_activity}\n" \
+               f"------------------------------------------\n" \
+               f"  allocation type:   {self.allocation_type.value}\n" \
+               f"  trader allocation: {(allocation.amount / 1e18):.3f}"
 
 
 class HolderDetails:
@@ -58,14 +52,12 @@ class HolderDetails:
             CombinedGnoHolder.zero_for_account(account)
         )
         allocation = self.allocations.get(account)
-
-        return f"""
-  mainnet:           {gno.mainnet_gno / 1e18}
-  gnosis chain:      {gno.gchain_gno / 1e18}
---------------------------------------------
-  total gno:         {gno.total_gno / 1e18}
-  holder allocation: {allocation.amount / 1e18}\r
-"""
+        if gno.total_gno < 0.1:
+            return "   Total GNO balance < 0.1"
+        return f"  mainnet:           {(gno.mainnet_gno / 1e18):.3f}\n" \
+               f"  gnosis chain:      {(gno.gchain_gno / 1e18):.3f}\n" \
+               f"  total gno:         {(gno.total_gno / 1e18):.3f}\n" \
+               f"  holder allocation: {(allocation.amount / 1e18):.3f}"
 
 
 class PoapDetails:
@@ -82,9 +74,11 @@ class AllocationDetails:
             holder: HolderDetails,
             primary: TraderDetails,
             consolation: TraderDetails,
-            poap: PoapDetails
+            raw_trader_data: dict[str, CowSwapTrader],
+            poap: PoapDetails,
     ):
         self.holder_data = holder
+        self.raw_trader_data = raw_trader_data
         self.primary_trader_data = primary
         self.consolation_trader_data = consolation
         self.poap_data = poap
@@ -92,21 +86,21 @@ class AllocationDetails:
     def account_detail_string(self, account):
         primary_data = self.primary_trader_data.account_detail_string(account)
         consolation_data = self.consolation_trader_data.account_detail_string(account)
-        trader_details = "No Detected Trader Activity"
+        raw_trader_data = self.raw_trader_data.get(account, None)
+        trader_details = "No trading activity prior to snapshot"
         if primary_data is not None:
             trader_details = primary_data
         elif consolation_data is not None:
             trader_details = consolation_data
-
-        return f"""
-============================================
-Account\n  {account}
---------------------------------------------
-GNO Holder Details\n  {self.holder_data.account_detail_string(account).strip()}
---------------------------------------------
-Trader Details\n  {trader_details.strip()}
-============================================
-"""
+        elif raw_trader_data is not None:
+            trader_details = str(raw_trader_data)
+        return f"==========================================\n" \
+               f"Account\n{account}\n" \
+               f"------------------------------------------\n" \
+               f"GNO Holder Details\n  {self.holder_data.account_detail_string(account).strip()}\n" \
+               f"------------------------------------------\n" \
+               f"Trader Details\n  {trader_details.strip()}\n" \
+               f"=========================================="
 
 
 def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetails:
@@ -123,6 +117,10 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
     )
 
     # Load Trader Info
+    raw_trader_data = CowSwapTrader.load_and_merge_network_trader_data(
+        mainnet_file=allocation_files.trader_data.traders.filename('mainnet'),
+        gchain_file=allocation_files.trader_data.traders.filename('gchain'),
+    )
     primary_trader_details = TraderDetails(
         data=CowSwapTrader.load_from(
             load_file=allocation_files.trader_data.primary_trader
@@ -157,7 +155,8 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
         holder=holder_details,
         primary=primary_trader_details,
         consolation=consolation_details,
-        poap=poap_details
+        poap=poap_details,
+        raw_trader_data=raw_trader_data
     )
 
 
@@ -175,6 +174,9 @@ if __name__ == '__main__':
 
     allocation_details = load_all_data_from_out(AllocationFiles())
 
-    accounts = Account.load_from(File(name='accounts.csv', path='./data/'))
+    accounts = sorted(
+        Account.load_from(File(name='accounts.csv', path='./data/')),
+        key=lambda t: t.account
+    )
     for account in accounts:
         print(allocation_details.account_detail_string(account.account))
