@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code,too-few-public-methods,too-many-arguments
 import argparse
 from enum import Enum
 from typing import Optional
@@ -62,9 +63,16 @@ class HolderDetails:
 
 class PoapDetails:
 
-    def __init__(self, alphas, allocations):
-        self.alphas = alphas
+    def __init__(self, mainnet, gchain, allocations):
+        self.mainnet_alphas = set(a.account for a in mainnet)
+        self.gchain_alphas = set(a.account for a in gchain)
         self.allocations = allocations
+
+    def account_detail_string(self, account: str) -> str:
+        allocation = self.allocations.get(account).amount / 1e18
+        return f"  mainnet alpha:        {account in self.mainnet_alphas}\n" \
+               f"  gchain alpha:         {account in self.gchain_alphas}\n" \
+               f"  community allocation: {allocation:.3f}"
 
 
 class AllocationDetails:
@@ -94,13 +102,17 @@ class AllocationDetails:
             trader_details = consolation_data
         elif raw_trader_data is not None:
             trader_details = str(raw_trader_data)
+
+        holder_details = self.holder_data.account_detail_string(account).strip()
+        poap_details = self.poap_data.account_detail_string(account).strip()
         return f"==========================================\n" \
                f"Account\n{account}\n" \
                f"------------------------------------------\n" \
-               f"GNO Holder Details\n  {self.holder_data.account_detail_string(account).strip()}\n" \
+               f"GNO Holder Details\n  {holder_details}\n" \
                f"------------------------------------------\n" \
                f"Trader Details\n  {trader_details.strip()}\n" \
-               f"=========================================="
+               f"------------------------------------------\n" \
+               f"Community Details\n  {poap_details}"
 
 
 def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetails:
@@ -143,11 +155,14 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
     # Load POAP Info
     poap_details = PoapDetails(
         # TODO - load gchain alphas
-        alphas=Account.load_from(
+        mainnet=Account.load_from(
             load_file=allocation_files.alpha_traders.filename('mainnet')
         ),
-        allocations=Allocation.load_from(
-            load_file=allocation_files.poap_allocations
+        gchain=Account.load_from(
+            load_file=allocation_files.alpha_traders.filename('gchain')
+        ),
+        allocations=IndexedAllocations.load_from_file(
+            file=allocation_files.poap_allocations
         )
     )
 
@@ -178,5 +193,5 @@ if __name__ == '__main__':
         Account.load_from(File(name='accounts.csv', path='./data/')),
         key=lambda t: t.account
     )
-    for account in accounts:
-        print(allocation_details.account_detail_string(account.account))
+    for account_obj in accounts:
+        print(allocation_details.account_detail_string(account_obj.account))

@@ -251,7 +251,7 @@ class CowSwapTrader(Account):
                   f"  days between:      {self.days_between_first_and_last()}"
         if not self.is_eligible():
             volume, trades, days = self.eligibility_criteria
-            results += f"Trading Criteria Met\n" \
+            results += f"\nTrading Criteria Met\n" \
                        f"  volume: {volume}\n" \
                        f"  trades: {trades}\n" \
                        f"  days:   {days}"
