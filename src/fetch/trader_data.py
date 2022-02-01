@@ -9,6 +9,7 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Optional
 
 from src.constants import VOLUME_TIERS, TRADING_TIER_FACTORS, SNAPSHOT_BLOCK_NUMBER, \
     USER_OPTION_TIER_FACTORS
@@ -93,8 +94,8 @@ class CowSwapTrader(Account):
     eligible_volume: int
     num_trades: int
     # Number of days between trader's first and last trade
-    first_trade: date
-    last_trade: date
+    first_trade: Optional[date]
+    last_trade: Optional[date]
     allocation_tier: int = -1
 
     # pylint: disable=too-many-arguments
@@ -103,8 +104,8 @@ class CowSwapTrader(Account):
             account: str,
             eligible_volume: int,
             num_trades: int,
-            first_trade: date,
-            last_trade: date,
+            first_trade: Optional[date],
+            last_trade: Optional[date],
     ):
         Account.__init__(self, account)
         self.eligible_volume = eligible_volume
@@ -143,7 +144,9 @@ class CowSwapTrader(Account):
 
     def days_between_first_and_last(self):
         """Number of days between first and last trade"""
-        return (self.last_trade - self.first_trade).days
+        if self.first_trade is not None:
+            return (self.last_trade - self.first_trade).days
+        return None
 
     def merge(self, other: CowSwapTrader) -> CowSwapTrader:
         """
@@ -219,6 +222,16 @@ class CowSwapTrader(Account):
         return Allocation(
             account=self.account,
             amount=supply // num_recipients,
+        )
+
+    @classmethod
+    def default_for_account(cls, account: str) -> CowSwapTrader:
+        return cls(
+            account=account,
+            eligible_volume=0,
+            num_trades=0,
+            first_trade=None,
+            last_trade=None,
         )
 
 
