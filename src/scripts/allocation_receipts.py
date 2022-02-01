@@ -177,10 +177,10 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Determine if ethereum address is a contract"
+        description="Fetch Allocation Receipts for a list of accounts"
     )
     parser.add_argument(
-        "--account_file",
+        "--account-file",
         type=str,
         help="file containing ethereum addresses",
     )
@@ -193,5 +193,7 @@ if __name__ == '__main__':
         Account.load_from(File(name=args.account_file, path='./out/')),
         key=lambda t: t.account
     )
-    for account_obj in accounts:
-        print(allocation_details.account_detail_string(account_obj.account))
+
+    receipts = [allocation_details.account_detail_string(a.account) for a in accounts]
+    with open(File('allocation-receipts.csv').filename(), 'w', encoding='utf-8') as out:
+        out.write("\n".join(receipts))
