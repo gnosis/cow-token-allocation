@@ -180,17 +180,17 @@ if __name__ == '__main__':
         description="Determine if ethereum address is a contract"
     )
     parser.add_argument(
-        "--accountFile",
+        "--account_file",
         type=str,
         help="file containing ethereum addresses",
     )
-
+    args = parser.parse_args()
     # Load all Data related to allocations and where they were derived from
 
     allocation_details = load_all_data_from_out(AllocationFiles())
 
     accounts = sorted(
-        Account.load_from(File(name='accounts.csv', path='./data/')),
+        Account.load_from(File(name=args.account_file, path='./out/')),
         key=lambda t: t.account
     )
     for account_obj in accounts:
