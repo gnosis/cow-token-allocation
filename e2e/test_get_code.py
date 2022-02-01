@@ -4,7 +4,10 @@ import unittest
 from src.fetch.contracts import EvmAccountInfo
 from src.files import NetworkFile
 
-NODE_URL = os.environ['NODE_URL']
+NODE_URL = {
+    'mainnet': os.environ.get('NODE_URL'),
+    'gchain': 'https://rpc.gnosischain.com/',
+}
 
 test_file = NetworkFile(name="test-file.csv", path='./out/test')
 
@@ -28,7 +31,7 @@ class TestCodeGetter(unittest.TestCase):
 
     @staticmethod
     def drop_files(func):
-        def magic(self):
+        def wrapped_func(self):
             func(self)
             try:
                 os.remove(test_file.filename('mainnet').filename())
@@ -39,13 +42,13 @@ class TestCodeGetter(unittest.TestCase):
             except FileNotFoundError:
                 pass
 
-        return magic
+        return wrapped_func
 
     @drop_files
     def test_limited_is_contract(self):
         contract_detector = EvmAccountInfo(
             max_batch_size=2,
-            node_url=NODE_URL,
+            node_url=NODE_URL['mainnet'],
             addresses=self.addresses,
             network='mainnet'
         )
@@ -63,7 +66,7 @@ class TestCodeGetter(unittest.TestCase):
     def test_results(self):
         contract_detector = EvmAccountInfo(
             max_batch_size=2,
-            node_url=NODE_URL,
+            node_url=NODE_URL['mainnet'],
             addresses=self.addresses,
             network='mainnet'
         )
@@ -73,7 +76,7 @@ class TestCodeGetter(unittest.TestCase):
     def test_fail_with_bad_input(self):
         contract_detector = EvmAccountInfo(
             max_batch_size=2,
-            node_url=NODE_URL,
+            node_url=NODE_URL['mainnet'],
             addresses=["Bad Input"],
             network='mainnet'
         )
@@ -89,7 +92,7 @@ class TestCodeGetter(unittest.TestCase):
         ]
         detector = EvmAccountInfo(
             max_batch_size=num_items // 3,
-            node_url=NODE_URL,
+            node_url=NODE_URL['mainnet'],
             addresses=long_list,
             network='mainnet'
         )
@@ -99,19 +102,17 @@ class TestCodeGetter(unittest.TestCase):
     @drop_files
     def test_null_balances(self):
         without_balance = [
-            '0x01236cbba0485d7b21af836f52b711401300fddb',
-            '0x0123456789012345678901234567890123456789',
+            "0x" + f"{42}".zfill(40),
+            "0x" + f"{31}".zfill(40),
         ]
         fetcher = EvmAccountInfo(
-            node_url='https://rpc.gnosischain.com/',
+            node_url=NODE_URL['gchain'],
             addresses=without_balance,
             network='gchain'
         )
         self.assertEqual(fetcher.get_null_balances(), set(without_balance))
 
-        with_balance = [
-            '0x04a66cbba0485d7b21af836f52b711401300fddb'.lower()
-        ]
+        with_balance = ['0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d']
         fetcher.addresses = with_balance
         self.assertEqual(fetcher.get_null_balances(), set())
 
