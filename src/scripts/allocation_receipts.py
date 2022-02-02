@@ -3,9 +3,11 @@ import argparse
 from enum import Enum
 from typing import Optional
 
+from src.dune_analytics import DuneAnalytics
 from src.fetch.combined_holders import CombinedGnoHolder
 from src.fetch.trader_data import CowSwapTrader
 from src.files import File, AllocationFiles
+from src.generate.poap_allocation import IndexedPoapAllocations
 from src.models import Account, IndexedAllocations
 from src.utils.data import index_by_account
 
@@ -35,7 +37,20 @@ class TraderDetails:
         return f"{trader_activity}\n" \
                f"------------------------------------------\n" \
                f"  allocation type:   {self.allocation_type.value}\n" \
-               f"  trader allocation: {(allocation.amount / 1e18):.3f}"
+               f"  trader allocation:" \
+               f"                {(allocation.amount / 1e18):.3f}"
+
+
+class VerboseTraderDetails:
+    def __init__(
+            self,
+            primary: TraderDetails,
+            consolation: TraderDetails,
+            raw_trader_data: dict[str, CowSwapTrader],
+    ):
+        self.primary = primary
+        self.consolation = consolation
+        self.raw_trader_data = raw_trader_data
 
 
 class HolderDetails:
@@ -54,25 +69,36 @@ class HolderDetails:
         )
         allocation = self.allocations.get(account)
         if gno.total_gno < 0.1:
-            return "   Total GNO balance < 0.1"
-        return f"  mainnet:           {(gno.mainnet_gno / 1e18):.3f}\n" \
-               f"  gnosis chain:      {(gno.gchain_gno / 1e18):.3f}\n" \
-               f"  total gno:         {(gno.total_gno / 1e18):.3f}\n" \
-               f"  holder allocation: {(allocation.amount / 1e18):.3f}"
+            results = "   Total GNO balance < 0.1\n"
+        else:
+            results = f"  mainnet:           {(gno.mainnet_gno / 1e18):.3f}\n" \
+                      f"  gnosis chain:      {(gno.gchain_gno / 1e18):.3f}\n" \
+                      f"  total gno:         {(gno.total_gno / 1e18):.3f}\n"
+        return results + f"  holder allocation:" \
+                         f"                 {(allocation.amount / 1e18):.3f}"
 
 
 class PoapDetails:
 
-    def __init__(self, mainnet, gchain, allocations):
-        self.mainnet_alphas = set(a.account for a in mainnet)
-        self.gchain_alphas = set(a.account for a in gchain)
+    def __init__(self, poap_allocations, allocations):
+        self.poaps = poap_allocations
         self.allocations = allocations
 
     def account_detail_string(self, account: str) -> str:
-        allocation = self.allocations.get(account).amount / 1e18
-        return f"  mainnet alpha:        {account in self.mainnet_alphas}\n" \
-               f"  gchain alpha:         {account in self.gchain_alphas}\n" \
-               f"  community allocation: {allocation:.3f}"
+        total_allocation = self.allocations.get(account).amount / 1e18
+        individual_allocations = [
+            str(poap_allocation)
+            for poap_allocation in self.poaps.get(account)
+        ]
+        results = "  -----\n"
+        if not individual_allocations:
+            results += "  None\n"
+        else:
+            list_string = "\n  -----\n".join(individual_allocations)
+            results += f"  {list_string.strip()}\n"
+        return results + f"  -----\n" \
+                         f"  community allocation:" \
+                         f"              {total_allocation:.3f}"
 
 
 class AllocationDetails:
@@ -80,21 +106,19 @@ class AllocationDetails:
     def __init__(
             self,
             holder: HolderDetails,
-            primary: TraderDetails,
-            consolation: TraderDetails,
-            raw_trader_data: dict[str, CowSwapTrader],
+            trader: VerboseTraderDetails,
             poap: PoapDetails,
+            allocation_totals: IndexedAllocations
     ):
         self.holder_data = holder
-        self.raw_trader_data = raw_trader_data
-        self.primary_trader_data = primary
-        self.consolation_trader_data = consolation
+        self.trader_data = trader
         self.poap_data = poap
+        self.total_allocation = allocation_totals
 
     def account_detail_string(self, account):
-        primary_data = self.primary_trader_data.account_detail_string(account)
-        consolation_data = self.consolation_trader_data.account_detail_string(account)
-        raw_trader_data = self.raw_trader_data.get(account, None)
+        primary_data = self.trader_data.primary.account_detail_string(account)
+        consolation_data = self.trader_data.consolation.account_detail_string(account)
+        raw_trader_data = self.trader_data.raw_trader_data.get(account, None)
         trader_details = "No trading activity prior to snapshot"
         if primary_data is not None:
             trader_details = primary_data
@@ -112,7 +136,9 @@ class AllocationDetails:
                f"------------------------------------------\n" \
                f"Trader Details\n  {trader_details.strip()}\n" \
                f"------------------------------------------\n" \
-               f"Community Details\n  {poap_details}"
+               f"Community Details (POAPs Held)\n  {poap_details}" \
+               f"------------------------------------------\n" \
+               f"Total Allocation {self.total_allocation.get(account).amount}"
 
 
 def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetails:
@@ -129,37 +155,37 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
     )
 
     # Load Trader Info
-    raw_trader_data = CowSwapTrader.load_and_merge_network_trader_data(
-        mainnet_file=allocation_files.trader_data.traders.filename('mainnet'),
-        gchain_file=allocation_files.trader_data.traders.filename('gchain'),
-    )
-    primary_trader_details = TraderDetails(
-        data=CowSwapTrader.load_from(
-            load_file=allocation_files.trader_data.primary_trader
+    trader_details = VerboseTraderDetails(
+        raw_trader_data=CowSwapTrader.load_and_merge_network_trader_data(
+            mainnet_file=allocation_files.trader_data.traders.filename('mainnet'),
+            gchain_file=allocation_files.trader_data.traders.filename('gchain'),
         ),
-        allocations=IndexedAllocations.load_from_file(
-            file=allocation_files.trader_data.primary_allocation
+        primary=TraderDetails(
+            data=CowSwapTrader.load_from(
+                load_file=allocation_files.trader_data.primary_trader
+            ),
+            allocations=IndexedAllocations.load_from_file(
+                file=allocation_files.trader_data.primary_allocation
+            ),
+            allocation_type=AllocationType.PRIMARY
         ),
-        allocation_type=AllocationType.PRIMARY
-    )
-    consolation_details = TraderDetails(
-        data=CowSwapTrader.load_from(
-            load_file=allocation_files.trader_data.consolation_trader
+        consolation=TraderDetails(
+            data=CowSwapTrader.load_from(
+                load_file=allocation_files.trader_data.consolation_trader
+            ),
+            allocations=IndexedAllocations.load_from_file(
+                file=allocation_files.trader_data.consolation_allocation
+            ),
+            allocation_type=AllocationType.CONSOLATION
         ),
-        allocations=IndexedAllocations.load_from_file(
-            file=allocation_files.trader_data.consolation_allocation
-        ),
-        allocation_type=AllocationType.CONSOLATION
     )
 
-    # Load POAP Info
+    # Load POAP holder allocations.
     poap_details = PoapDetails(
-        # TODO - load gchain alphas
-        mainnet=Account.load_from(
-            load_file=allocation_files.alpha_traders.filename('mainnet')
-        ),
-        gchain=Account.load_from(
-            load_file=allocation_files.alpha_traders.filename('gchain')
+        poap_allocations=IndexedPoapAllocations.load_from(
+            DuneAnalytics('', '', 0),  # This is a dummy dune instance.
+            allocation_files.alpha_traders,
+            allocation_files.poap_categories
         ),
         allocations=IndexedAllocations.load_from_file(
             file=allocation_files.poap_allocations
@@ -168,10 +194,11 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
 
     return AllocationDetails(
         holder=holder_details,
-        primary=primary_trader_details,
-        consolation=consolation_details,
+        trader=trader_details,
         poap=poap_details,
-        raw_trader_data=raw_trader_data
+        allocation_totals=IndexedAllocations.load_from_file(
+            file=allocation_files.merkle_leaf
+        )
     )
 
 

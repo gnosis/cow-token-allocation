@@ -263,7 +263,7 @@ class CowSwapTrader(Account):
                        f"  days:   {days}"
             results += f"\nConsolation Criteria Met (any of)\n" \
                        f"  volume: {_consolation_volume}\n" \
-                       f"  trades: {consolation_trades}\n"
+                       f"  trades: {consolation_trades}"
         return results
 
     @classmethod
