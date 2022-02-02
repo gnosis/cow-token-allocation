@@ -508,3 +508,23 @@ following script:
 ```shell
 python -m scripts.gchain_transfer_file  
 ```
+
+### Allocation Receipts
+
+Requires having previously generated all the output data (by running main).
+
+Create an accounts.csv file for the accounts you'd like receipts.
+
+Here is a sample file:
+
+```shell
+account
+0x262d23a2d916f6CF08e0235315aA51E22d142d0b
+0x1e9abB8087f733ef6Ab7a0E834bf0e3164fE36BE
+0xd9c2624b735c6ded3cd0bb79f04feb038cf73aa9
+0xaa92521387df9cf483f0c3e0e6f5424e9998316f
+```
+
+```shell
+python -m src.scripts.allocation_receipts --account-file <PATH_TO_ACCOUNTS_CSV>
+```
