@@ -6,7 +6,7 @@ from typing import Optional
 from src.fetch.combined_holders import CombinedGnoHolder
 from src.fetch.trader_data import CowSwapTrader
 from src.files import File, AllocationFiles
-from src.models import Account, Allocation, IndexedAllocations
+from src.models import Account, IndexedAllocations
 from src.utils.data import index_by_account
 
 
@@ -188,12 +188,12 @@ if __name__ == '__main__':
     # Load all Data related to allocations and where they were derived from
 
     allocation_details = load_all_data_from_out(AllocationFiles())
-
+    path, filename = args.account_file.rsplit('/', 1)
     accounts = sorted(
-        Account.load_from(File(name=args.account_file, path='./out/')),
+        Account.load_from(File(name=filename, path=path)),
         key=lambda t: t.account
     )
 
     receipts = [allocation_details.account_detail_string(a.account) for a in accounts]
-    with open(File('allocation-receipts.csv').filename(), 'w', encoding='utf-8') as out:
-        out.write("\n".join(receipts))
+    for receipt in receipts:
+        print(receipt)
