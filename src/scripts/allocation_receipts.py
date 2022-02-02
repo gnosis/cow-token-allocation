@@ -7,8 +7,9 @@ from src.dune_analytics import DuneAnalytics
 from src.fetch.combined_holders import CombinedGnoHolder
 from src.fetch.trader_data import CowSwapTrader
 from src.files import File, AllocationFiles
+from src.generate.merkle_data import MerkleLeaf
 from src.generate.poap_allocation import IndexedPoapAllocations
-from src.models import Account, IndexedAllocations
+from src.models import Account, IndexedAllocations, Allocation
 from src.utils.data import index_by_account
 
 
@@ -129,6 +130,7 @@ class AllocationDetails:
 
         holder_details = self.holder_data.account_detail_string(account).strip()
         poap_details = self.poap_data.account_detail_string(account).strip()
+        total_allocation = self.total_allocation.get(account).amount / 1e18
         return f"==========================================\n" \
                f"Account\n{account}\n" \
                f"------------------------------------------\n" \
@@ -136,9 +138,9 @@ class AllocationDetails:
                f"------------------------------------------\n" \
                f"Trader Details\n  {trader_details.strip()}\n" \
                f"------------------------------------------\n" \
-               f"Community Details (POAPs Held)\n  {poap_details}" \
+               f"Community Details (POAPs Held)\n  {poap_details}\n" \
                f"------------------------------------------\n" \
-               f"Total Allocation {self.total_allocation.get(account).amount}"
+               f"Total Allocation                   {total_allocation:.3f}"
 
 
 def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetails:
@@ -161,7 +163,7 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
             gchain_file=allocation_files.trader_data.traders.filename('gchain'),
         ),
         primary=TraderDetails(
-            data=CowSwapTrader.load_from(
+            data=CowSwapTrader.load_from_file(
                 load_file=allocation_files.trader_data.primary_trader
             ),
             allocations=IndexedAllocations.load_from_file(
@@ -170,7 +172,7 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
             allocation_type=AllocationType.PRIMARY
         ),
         consolation=TraderDetails(
-            data=CowSwapTrader.load_from(
+            data=CowSwapTrader.load_from_file(
                 load_file=allocation_files.trader_data.consolation_trader
             ),
             allocations=IndexedAllocations.load_from_file(
@@ -191,14 +193,16 @@ def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetai
             file=allocation_files.poap_allocations
         )
     )
+    merkle_leaves = MerkleLeaf.load_from(allocation_files.merkle_leaf)
 
     return AllocationDetails(
         holder=holder_details,
         trader=trader_details,
         poap=poap_details,
-        allocation_totals=IndexedAllocations.load_from_file(
-            file=allocation_files.merkle_leaf
-        )
+        allocation_totals=IndexedAllocations({
+            leaf.Account: Allocation(leaf.Account, leaf.Airdrop)
+            for leaf in merkle_leaves
+        })
     )
 
 

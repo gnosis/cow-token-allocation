@@ -272,8 +272,8 @@ class CowSwapTrader(Account):
             mainnet_file: File,
             gchain_file: File
     ) -> dict[str, CowSwapTrader]:
-        mainnet_traders = CowSwapTrader.load_from(mainnet_file)
-        gchain_traders = CowSwapTrader.load_from(gchain_file)
+        mainnet_traders = CowSwapTrader.load_from_file(mainnet_file)
+        gchain_traders = CowSwapTrader.load_from_file(gchain_file)
         results = {}
         for account in mainnet_traders.keys() | gchain_traders.keys():
             mainnet_entry = mainnet_traders.pop(
