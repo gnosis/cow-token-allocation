@@ -237,6 +237,11 @@ class CombinedGnoHolder:
         )
 
     @classmethod
+    def zero_for_account(cls, account: str) -> CombinedGnoHolder:
+        """Empty constructor"""
+        return CombinedGnoHolder(account=account, mainnet_gno=0, gchain_gno=0)
+
+    @classmethod
     def load_from(cls, load_from: File) -> list[CombinedGnoHolder]:
         print(f"Loading Combined Holder Data from {load_from.name}")
         with open(load_from.filename(), 'r', encoding='utf-8') as holder_file:

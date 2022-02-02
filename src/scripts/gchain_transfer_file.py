@@ -13,7 +13,7 @@ class NativeTransfer:
     amount: float
     token_type: str = "native"
     token_address: Optional[str] = None
-    id: Optional[int] = None
+    token_id: Optional[int] = None
 
 
 if __name__ == '__main__':

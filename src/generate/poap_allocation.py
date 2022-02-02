@@ -1,4 +1,6 @@
 """Fetch relevant data and reduce to a token allocation output file"""
+from __future__ import annotations
+
 import csv
 from collections import defaultdict
 from dataclasses import dataclass
@@ -28,17 +30,22 @@ class TokenAllocation:
         """generates allocation based on supply and total weight"""
         return (self.factor * USER_ALLOCATION['POAP']) // total_weight
 
+    def __str__(self):
+        return f"  event:    {self.event}\n" \
+               f"  event ID: {self.token_id}\n" \
+               f"  weight:   {self.factor}"
+
 
 ALPHA_TRADER_ALLOCATION = {
     'mainnet': TokenAllocation(
         token_id=1,  # Doesn't matter, use network id
         factor=16,
-        event="Traded on Alpha & Beta Contract (mainnet)"
+        event="Alpha Trader (Mainnet)"
     ),
     'gchain': TokenAllocation(
         token_id=100,  # Doesn't matter, use network id
         factor=4,
-        event="Traded on Alpha & Beta Contract (gchain)"
+        event="Alpha Trader (Gnosis Chain)"
     )
 
 }
@@ -58,6 +65,9 @@ class IndexedPoapAllocations:
     def items(self):
         """returns the items from the inner data field"""
         return self.data.items()
+
+    def get(self, key):
+        return self.data.get(key, [])
 
     def insert_many(
             self,
@@ -109,6 +119,23 @@ class IndexedPoapAllocations:
                 set(holders)) == num_holders, f"Duplicate Holder token {token_id}!"
             print(f"POAP {token_id} has {num_holders} holders")
 
+    @classmethod
+    def load_from(
+            cls,
+            dune: DuneAnalytics,
+            alpha_traders_file: NetworkFile,
+            category_file: File
+    ) -> IndexedPoapAllocations:
+        results = cls()
+
+        # Append Alpha user allocations.
+        results.populate_alpha_users(dune, load_from=alpha_traders_file)
+
+        # Append POAP holder allocations.
+        results.populate_poap_holders(category_file=category_file)
+
+        return results
+
 
 def load_poap_holders(token_id: int) -> set[Account]:
     """Loads POAP holders from file."""
@@ -156,14 +183,11 @@ def derive_allocations(
             f"not found, building from scratch"
         )
 
-    # Initialize weight accumulator.
-    indexed_allocations = IndexedPoapAllocations()
-
-    # Append Alpha user allocations.
-    indexed_allocations.populate_alpha_users(dune, load_from=load_from.alpha_traders)
-
-    # Append POAP holder allocations.
-    indexed_allocations.populate_poap_holders(load_from.poap_categories)
+    indexed_allocations = IndexedPoapAllocations.load_from(
+        dune,
+        load_from.alpha_traders,
+        load_from.poap_categories
+    )
 
     allocations = [
         Allocation(

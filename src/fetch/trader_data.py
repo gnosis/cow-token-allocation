@@ -9,6 +9,7 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Optional
 
 from src.constants import VOLUME_TIERS, TRADING_TIER_FACTORS, SNAPSHOT_BLOCK_NUMBER, \
     USER_OPTION_TIER_FACTORS
@@ -93,8 +94,8 @@ class CowSwapTrader(Account):
     eligible_volume: int
     num_trades: int
     # Number of days between trader's first and last trade
-    first_trade: date
-    last_trade: date
+    first_trade: Optional[date]
+    last_trade: Optional[date]
     allocation_tier: int = -1
 
     # pylint: disable=too-many-arguments
@@ -103,8 +104,8 @@ class CowSwapTrader(Account):
             account: str,
             eligible_volume: int,
             num_trades: int,
-            first_trade: date,
-            last_trade: date,
+            first_trade: Optional[date],
+            last_trade: Optional[date],
     ):
         Account.__init__(self, account)
         self.eligible_volume = eligible_volume
@@ -112,6 +113,16 @@ class CowSwapTrader(Account):
         self.first_trade = first_trade
         self.last_trade = last_trade
         self.allocation_tier = self._compute_allocation_tier()
+        days_between = self.days_between_first_and_last() or -1
+        self.eligibility_criteria = [
+            self.eligible_volume >= TRADER_PARAMETERS.min_volume,
+            self.num_trades >= TRADER_PARAMETERS.primary_min_trades,
+            days_between >= TRADER_PARAMETERS.days_between,
+        ]
+        self.consolation_criteria = [
+                self.eligible_volume >= TRADER_PARAMETERS.min_volume,
+                self.num_trades >= TRADER_PARAMETERS.consolation_min_trades
+            ]
 
     @classmethod
     def load_from_file(cls, load_file: File) -> dict[str, CowSwapTrader]:
@@ -143,7 +154,9 @@ class CowSwapTrader(Account):
 
     def days_between_first_and_last(self):
         """Number of days between first and last trade"""
-        return (self.last_trade - self.first_trade).days
+        if self.first_trade is not None:
+            return (self.last_trade - self.first_trade).days
+        return None
 
     def merge(self, other: CowSwapTrader) -> CowSwapTrader:
         """
@@ -152,29 +165,32 @@ class CowSwapTrader(Account):
         Used to merge gchain and mainnet trader data.
         """
         assert self.account == other.account, "Can't merge different traders!"
-
+        try:
+            first_trade = min(self.first_trade, other.first_trade)
+        except TypeError:
+            first_trade = self.first_trade or other.first_trade
+        try:
+            last_trade = max(self.last_trade, other.last_trade)
+        except TypeError:
+            last_trade = self.last_trade or other.last_trade
         return CowSwapTrader(
             account=self.account,
             eligible_volume=self.eligible_volume + other.eligible_volume,
             num_trades=self.num_trades + other.num_trades,
-            first_trade=min(self.first_trade, other.first_trade),
-            last_trade=max(self.last_trade, other.last_trade)
+            first_trade=first_trade,
+            last_trade=last_trade,
         )
 
     def is_eligible(self) -> bool:
         """
         :return: True if record meets eligibility criteria defined by TRADER_PARAMETERS.
         """
-        eligibility_criteria = [
-            self.eligible_volume >= TRADER_PARAMETERS.min_volume,
-            self.num_trades >= TRADER_PARAMETERS.primary_min_trades,
-            self.days_between_first_and_last() >= TRADER_PARAMETERS.days_between,
-        ]
-        if all(eligibility_criteria) and self.allocation_tier not in TRADING_TIER_FACTORS:
+        is_eligible = all(self.eligibility_criteria)
+        if is_eligible and self.allocation_tier not in TRADING_TIER_FACTORS:
             raise ValueError(
                 "Trader meets eligibility criteria, but has invalid allocation tier!"
             )
-        return all(eligibility_criteria)
+        return is_eligible
 
     def to_user_option(
             self,
@@ -220,6 +236,58 @@ class CowSwapTrader(Account):
             account=self.account,
             amount=supply // num_recipients,
         )
+
+    @classmethod
+    def default_for_account(cls, account: str) -> CowSwapTrader:
+        return cls(
+            account=account,
+            eligible_volume=0,
+            num_trades=0,
+            first_trade=None,
+            last_trade=None,
+        )
+
+    def __str__(self):
+        results = f"  eligible volume:   {self.eligible_volume}\n" \
+                  f"  num trades:        {self.num_trades}\n" \
+                  f"  first trade date:  {self.first_trade}\n" \
+                  f"  last trade date:   {self.last_trade}\n" \
+                  f"  days between:      {self.days_between_first_and_last()}"
+
+        if not self.is_eligible():
+            volume, trades, days = self.eligibility_criteria
+            _consolation_volume, consolation_trades = self.consolation_criteria
+            results += f"\nPrimary Criteria Met (all of)\n" \
+                       f"  volume: {volume}\n" \
+                       f"  trades: {trades}\n" \
+                       f"  days:   {days}"
+            results += f"\nConsolation Criteria Met (any of)\n" \
+                       f"  volume: {_consolation_volume}\n" \
+                       f"  trades: {consolation_trades}"
+        return results
+
+    @classmethod
+    def load_and_merge_network_trader_data(
+            cls,
+            mainnet_file: File,
+            gchain_file: File
+    ) -> dict[str, CowSwapTrader]:
+        mainnet_traders = CowSwapTrader.load_from_file(mainnet_file)
+        gchain_traders = CowSwapTrader.load_from_file(gchain_file)
+        results = {}
+        for account in mainnet_traders.keys() | gchain_traders.keys():
+            mainnet_entry = mainnet_traders.pop(
+                account,
+                CowSwapTrader.default_for_account(account)
+            )
+            gchain_entry = gchain_traders.pop(
+                account,
+                CowSwapTrader.default_for_account(account)
+            )
+
+            combined_entry = mainnet_entry.merge(gchain_entry)
+            results[account] = combined_entry
+        return results
 
 
 def fetch_trader_data(
@@ -319,11 +387,7 @@ def fetch_combined(
             tier_counts[user_entry.allocation_tier] += 1
             primary.append(user_entry)
         else:
-            consolation_criteria = [
-                user_entry.eligible_volume >= TRADER_PARAMETERS.min_volume,
-                user_entry.num_trades >= TRADER_PARAMETERS.consolation_min_trades
-            ]
-            if any(consolation_criteria):
+            if any(user_entry.consolation_criteria):
                 consolation.append(user_entry)
 
     allocation_tiers = AllocationTiers(tier_counts)
