@@ -34,12 +34,11 @@ class TraderDetails:
         trader_activity = self.data.get(account)
         if trader_activity is None:
             return None
-        allocation = self.allocations.get(account)
+        allocation = f"{(self.allocations.get(account).amount / 1e18):.3f}"
         return f"{trader_activity}\n" \
                f"------------------------------------------\n" \
                f"  allocation type:   {self.allocation_type.value}\n" \
-               f"  trader allocation:" \
-               f"                {(allocation.amount / 1e18):.3f}"
+               f"  trader allocation: {allocation.rjust(21, ' ')}"
 
 
 class VerboseTraderDetails:
@@ -68,15 +67,14 @@ class HolderDetails:
             account,
             CombinedGnoHolder.zero_for_account(account)
         )
-        allocation = self.allocations.get(account)
+        allocation = f"{(self.allocations.get(account).amount / 1e18):.3f}"
         if gno.total_gno < 0.1:
             results = "   Total GNO balance < 0.1\n"
         else:
             results = f"  mainnet:           {(gno.mainnet_gno / 1e18):.3f}\n" \
                       f"  gnosis chain:      {(gno.gchain_gno / 1e18):.3f}\n" \
                       f"  total gno:         {(gno.total_gno / 1e18):.3f}\n"
-        return results + f"  holder allocation:" \
-                         f"                 {(allocation.amount / 1e18):.3f}"
+        return results + f"  holder allocation: {allocation.rjust(21, ' ')}"
 
 
 class PoapDetails:
@@ -86,7 +84,7 @@ class PoapDetails:
         self.allocations = allocations
 
     def account_detail_string(self, account: str) -> str:
-        total_allocation = self.allocations.get(account).amount / 1e18
+        total_allocation = f"{(self.allocations.get(account).amount / 1e18):.3f}"
         individual_allocations = [
             str(poap_allocation)
             for poap_allocation in self.poaps.get(account)
@@ -98,8 +96,7 @@ class PoapDetails:
             list_string = "\n  -----\n".join(individual_allocations)
             results += f"  {list_string.strip()}\n"
         return results + f"  -----\n" \
-                         f"  community allocation:" \
-                         f"              {total_allocation:.3f}"
+                         f"  community allocation: {total_allocation.rjust(18, ' ')}"
 
 
 class AllocationDetails:
@@ -130,7 +127,7 @@ class AllocationDetails:
 
         holder_details = self.holder_data.account_detail_string(account).strip()
         poap_details = self.poap_data.account_detail_string(account).strip()
-        total_allocation = self.total_allocation.get(account).amount / 1e18
+        total_allocation = f"{(self.total_allocation.get(account).amount / 1e18):.3f}"
         return f"==========================================\n" \
                f"Account\n{account}\n" \
                f"------------------------------------------\n" \
@@ -140,7 +137,7 @@ class AllocationDetails:
                f"------------------------------------------\n" \
                f"Community Details (POAPs Held)\n  {poap_details}\n" \
                f"------------------------------------------\n" \
-               f"Total Allocation                   {total_allocation:.3f}"
+               f"Total Allocation {total_allocation.rjust(25, ' ')}"
 
 
 def load_all_data_from_out(allocation_files: AllocationFiles) -> AllocationDetails:
