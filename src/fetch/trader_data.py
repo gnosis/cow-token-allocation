@@ -119,6 +119,10 @@ class CowSwapTrader(Account):
             self.num_trades >= TRADER_PARAMETERS.primary_min_trades,
             days_between >= TRADER_PARAMETERS.days_between,
         ]
+        self.consolation_criteria = [
+                self.eligible_volume >= TRADER_PARAMETERS.min_volume,
+                self.num_trades >= TRADER_PARAMETERS.consolation_min_trades
+            ]
 
     @classmethod
     def load_from_file(cls, load_file: File) -> dict[str, CowSwapTrader]:
@@ -164,11 +168,11 @@ class CowSwapTrader(Account):
         try:
             first_trade = min(self.first_trade, other.first_trade)
         except TypeError:
-            first_trade = None
+            first_trade = self.first_trade or other.first_trade
         try:
             last_trade = max(self.last_trade, other.last_trade)
         except TypeError:
-            last_trade = None
+            last_trade = self.last_trade or other.last_trade
         return CowSwapTrader(
             account=self.account,
             eligible_volume=self.eligible_volume + other.eligible_volume,
@@ -249,12 +253,17 @@ class CowSwapTrader(Account):
                   f"  first trade date:  {self.first_trade}\n" \
                   f"  last trade date:   {self.last_trade}\n" \
                   f"  days between:      {self.days_between_first_and_last()}"
+
         if not self.is_eligible():
             volume, trades, days = self.eligibility_criteria
-            results += f"\nTrading Criteria Met\n" \
+            _consolation_volume, consolation_trades = self.consolation_criteria
+            results += f"\nPrimary Criteria Met (all of)\n" \
                        f"  volume: {volume}\n" \
                        f"  trades: {trades}\n" \
                        f"  days:   {days}"
+            results += f"\nConsolation Criteria Met (any of)\n" \
+                       f"  volume: {_consolation_volume}\n" \
+                       f"  trades: {consolation_trades}\n"
         return results
 
     @classmethod
@@ -378,11 +387,7 @@ def fetch_combined(
             tier_counts[user_entry.allocation_tier] += 1
             primary.append(user_entry)
         else:
-            consolation_criteria = [
-                user_entry.eligible_volume >= TRADER_PARAMETERS.min_volume,
-                user_entry.num_trades >= TRADER_PARAMETERS.consolation_min_trades
-            ]
-            if any(consolation_criteria):
+            if any(user_entry.consolation_criteria):
                 consolation.append(user_entry)
 
     allocation_tiers = AllocationTiers(tier_counts)
