@@ -31,9 +31,9 @@ class TokenAllocation:
         return (self.factor * USER_ALLOCATION['POAP']) // total_weight
 
     def __str__(self):
-        return f"  event:  {self.event}\n" \
-               f"  token:  {self.token_id}\n" \
-               f"  weight: {self.factor}"
+        return f"  event:    {self.event}\n" \
+               f"  event ID: {self.token_id}\n" \
+               f"  weight:   {self.factor}"
 
 
 ALPHA_TRADER_ALLOCATION = {
