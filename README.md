@@ -354,7 +354,7 @@ according to the following eligible volume tiers
 | 0    | \>= 1K   and < 10K  |             1 |
 
 Please refer to
-[src/constants.py](https://github.com/gnosis/cow-airdrop/blob/93a9e9c2f5e10834522ded8a62f61312319ecc2d/src/constants.py#L24-L42)
+[src/constants.py](https://github.com/gnosis/cow-token-allocation/blob/main/src/constants.py#L103-L119)
 where all of these parameters are defined in the code.
 
 ## Consolation Trader Allocation
