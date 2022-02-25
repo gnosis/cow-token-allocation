@@ -5,7 +5,7 @@ Stores the result of querying entire GNO token holders on both networks into a s
 
 from src.constants import SNAPSHOT_BLOCK_NUMBER
 from src.dune_analytics import DuneAnalytics
-from src.files import TraderFiles, NetworkFile
+from src.files import NetworkFile, AllocationFiles
 from src.models import Account
 from src.utils.data import write_to_csv
 
@@ -49,6 +49,6 @@ if __name__ == "__main__":
             dune_connection,
             network=chain,
             block_number=SNAPSHOT_BLOCK_NUMBER[chain],
-            load_from=TraderFiles().alpha_traders
+            load_from=AllocationFiles().alpha_traders
         )
         print(alphas)
