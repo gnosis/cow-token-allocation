@@ -2,29 +2,12 @@ with
 -- For a permanent version of this query please visit: https://dune.xyz/queries/453088
 investment_claims as (
     select concat('0x', encode(claimant, 'hex'))   as claimant,
-           sum(case
-                   when "claimType" = 1
-                       then "claimedAmount"
-                   else 0 end)                     as gno_option_claimed,
-           sum(case
-                   when "claimType" = 2
-                       then "claimedAmount"
-                   else 0 end)                     as user_option_claimed,
-           sum(case
-                   when "claimType" = 1
-                       then "claimableAmount" end) as claimable_gno_option,
-           sum(case
-                   when "claimType" = 2
-                       then "claimableAmount"
-               end)                                as claimable_user_option,
-           sum(case
-                   when "claimType" = 1
-                       then EXTRACT(EPOCH FROM evt_block_time) * 10 ^ 5 + evt_index
-               end)                                as gno_claim_index,
-           sum(case
-                   when "claimType" = 2
-                       then EXTRACT(EPOCH FROM evt_block_time) * 10 ^ 5 + evt_index
-               end)                                as user_claim_index
+           sum(case when "claimType" = 1 then "claimedAmount" else 0 end)                                  as gno_option_claimed,
+           sum(case when "claimType" = 2 then "claimedAmount" else 0 end)                                  as user_option_claimed,
+           sum(case when "claimType" = 1 then "claimableAmount" end)                                       as claimable_gno_option,
+           sum(case when "claimType" = 2 then "claimableAmount" end)                                       as claimable_user_option,
+           sum(case when "claimType" = 1 then EXTRACT(EPOCH FROM evt_block_time) * 10 ^ 5 + evt_index end) as gno_claim_index,
+           sum(case when "claimType" = 2 then EXTRACT(EPOCH FROM evt_block_time) * 10 ^ 5 + evt_index end) as user_claim_index
     from cow_protocol."CowProtocolVirtualToken_evt_Claimed"
     group by claimant
 ),
@@ -66,6 +49,6 @@ exercised_investments as (
 select claimant       as "wallet",
        claim_index,
        dominant_claim as token,
-       'Gnosis Chain'           as chain
+       'Gnosis Chain' as chain
 from exercised_investments
 where investment_exercised >= '{{InvestmentThreshold}}'
