@@ -46,10 +46,11 @@ def fetch_cow_citizens(
     for token_id, citizen in enumerate(citizens):
         token = citizen['token']
         network = citizen['chain']
-
+        description = f"CoW Citizen - " \
+                      f"Early investor in the CoW Protocol with {token} on {network}"
         results.append({
             "id": token_id,
-            "description": f"CoW Citizen - Early investor in the CoW Protocol with {token} on {network}",
+            "description": description,
             "external_url": "https://citizen.cow.fi/NFT/",
             "image": f"https://cowcitizen.netlify.app/NFT/{token_id}/{token_id}.gif",
             "name": "CoW Citizen - Early Investor",
@@ -78,7 +79,7 @@ if __name__ == "__main__":
     dune_connection = DuneAnalytics.new_from_environment()
     cow_citizen_nfts = fetch_cow_citizens(dune_connection)
     print("Total Citizens", len(cow_citizen_nfts))
-    filename = './out/citizens.json'
-    print(f"Writing to {filename}")
-    with open(filename, 'w', encoding='utf-8') as f:
+    OUTFILE = './out/citizens.json'
+    print(f"Writing to {OUTFILE}")
+    with open(OUTFILE, 'w', encoding='utf-8') as f:
         json.dump(cow_citizen_nfts, f)
