@@ -23,34 +23,19 @@ independent_investments_exercised as (
            user_claim_index,
            investor_claim_index,
            case
-               when claimable_gno_option is not null
-                   then gno_option_claimed / claimable_gno_option
-               end as gno_option_exercised,
+               when claimable_gno_option is not null then gno_option_claimed / claimable_gno_option
+           end as gno_option_exercised,
            case
-               when claimable_user_option is not null
-                   then user_option_claimed / claimable_user_option
-               end as user_option_exercised,
+               when claimable_user_option is not null then user_option_claimed / claimable_user_option
+           end as user_option_exercised,
            case
-               when claimable_investor_option is not null
-                   then investor_option_claimed / claimable_investor_option
-               end as investor_option_exercised,
+               when claimable_investor_option is not null then investor_option_claimed / claimable_investor_option
+           end as investor_option_exercised,
            case
-               when greatest(
-                            gno_option_claimed,
-                            user_option_claimed,
-                            investor_option_claimed
-                        ) = gno_option_claimed then 'GNO'
-               when greatest(
-                            gno_option_claimed,
-                            user_option_claimed,
-                            investor_option_claimed
-                        ) = user_option_claimed then 'ETH'
-               when greatest(
-                            gno_option_claimed,
-                            user_option_claimed,
-                            investor_option_claimed
-                        ) = investor_option_claimed then 'USDC'
-               end as dominant_claim
+               when greatest(gno_option_claimed, user_option_claimed, investor_option_claimed) = gno_option_claimed then 'GNO'
+               when greatest(gno_option_claimed, user_option_claimed, investor_option_claimed) = user_option_claimed then 'ETH'
+               when greatest(gno_option_claimed, user_option_claimed, investor_option_claimed) = investor_option_claimed then 'USDC'
+           end as dominant_claim
     from investment_claims
     where gno_option_claimed + user_option_claimed + investor_option_claimed >
           0 --! Exclude all candidates who did not invest at all or were not eligible
@@ -62,12 +47,12 @@ exercised_investments as (
                when dominant_claim = 'GNO' then gno_option_exercised
                when dominant_claim = 'ETH' then user_option_exercised
                when dominant_claim = 'USDC' then investor_option_exercised
-               end as investment_exercised,
+           end as investment_exercised,
            case
                when dominant_claim = 'GNO' then gno_claim_index
                when dominant_claim = 'ETH' then user_claim_index
                when dominant_claim = 'USDC' then investor_claim_index
-               end as claim_index,
+           end as claim_index,
            dominant_claim
     from independent_investments_exercised o
 )

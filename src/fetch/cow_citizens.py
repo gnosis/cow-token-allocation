@@ -3,7 +3,6 @@ Stores the result of querying entire GNO token holders on both networks into a s
 `data/{network}-lp-holders.csv`
 """
 import math
-import pprint
 
 from src.dune_analytics import DuneAnalytics
 
@@ -21,40 +20,29 @@ def fetch_cow_citizens(
     :param investment_threshold: percentage of exercising dominant investment.
     :return: collection of metadata data related minting of CoW Citizen NFT on `network`
     """
-    mainnet_citizens = dune.fetch(
-        query_filepath=f"./queries/mainnet_citizens.sql",
-        network='mainnet',
-        name="M-Citizens",
-        parameters=[
-            {
-                "key": "InvestmentThreshold",
-                "type": "number",
-                "value": str(investment_threshold)
-            }
-        ]
-    )
+    citizens = []
+    for network in ['mainnet', 'gchain']:
+        citizens.extend(dune.fetch(
+            query_filepath=f"./queries/{network}_citizens.sql",
+            network=network,
+            name="CoW Citizens",
+            parameters=[
+                {
+                    "key": "InvestmentThreshold",
+                    "type": "number",
+                    "value": str(investment_threshold)
+                }
+            ]
+        ))
 
-    gchain_citizens = dune.fetch(
-        query_filepath=f"./queries/gchain_citizens.sql",
-        network='gchain',
-        name="G-Citizens",
-        parameters=[
-            {
-                "key": "InvestmentThreshold",
-                "type": "number",
-                "value": str(investment_threshold)
-            }
-        ]
-    )
-    citizens = sorted(
-        mainnet_citizens + gchain_citizens,
-        key=lambda t: t['claim_index']
-    )
+    citizens.sort(key=lambda t: t['claim_index'])
+    # The following assertion implies that there was no collision of
+    # claim_index after merging the two result files
     assert len(citizens) == len(set(t['claim_index'] for t in citizens))
 
     results = []
 
-    num_citizens = math.ceil(math.log10(len(citizens)))
+    citizen_number_pad_length = math.ceil(math.log10(len(citizens)))
     for token_id, citizen in enumerate(citizens):
         token = citizen['token']
         network = citizen['chain']
@@ -68,7 +56,7 @@ def fetch_cow_citizens(
             "attributes": [
                 {
                     "trait_type": "Cow Citizen ID",
-                    "value": str(token_id).zfill(num_citizens)
+                    "value": str(token_id).zfill(citizen_number_pad_length)
                 },
                 {
                     "trait_type": "Investment token",
@@ -86,10 +74,11 @@ def fetch_cow_citizens(
 
 if __name__ == "__main__":
     import json
+
     dune_connection = DuneAnalytics.new_from_environment()
-    citizens = fetch_cow_citizens(dune_connection)
-    print("Total Citizens", len(citizens))
+    cow_citizen_nfts = fetch_cow_citizens(dune_connection)
+    print("Total Citizens", len(cow_citizen_nfts))
     filename = './out/citizens.json'
     print(f"Writing to {filename}")
     with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(citizens, f)
+        json.dump(cow_citizen_nfts, f)
