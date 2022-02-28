@@ -2,25 +2,24 @@
 Stores the result of querying entire GNO token holders on both networks into a single file
 `data/{network}-lp-holders.csv`
 """
+from __future__ import annotations
+
 import math
 
 from src.dune_analytics import DuneAnalytics
 
 
-# from src.utils.data import write_to_csv
-
-
 def fetch_cow_citizens(
         dune: DuneAnalytics,
         investment_threshold: float = 0.8
-) -> list[dict]:
+) -> (list[dict], list[dict]):
     """
     Queries for investors and generates a
     :param dune: open connection to dune analytics
     :param investment_threshold: percentage of exercising dominant investment.
     :return: collection of metadata data related minting of CoW Citizen NFT on `network`
     """
-    citizens = []
+    dune_citizens = []
     for network in ['mainnet', 'gchain']:
         citizens.extend(dune.fetch(
             query_filepath=f"./queries/{network}_citizens.sql",
@@ -35,20 +34,20 @@ def fetch_cow_citizens(
             ]
         ))
 
-    citizens.sort(key=lambda t: t['claim_index'])
+    dune_citizens.sort(key=lambda t: t['claim_index'])
     # The following assertion implies that there was no collision of
     # claim_index after merging the two result files
-    assert len(citizens) == len(set(t['claim_index'] for t in citizens))
+    assert len(dune_citizens) == len(set(t['claim_index'] for t in dune_citizens))
 
-    results = []
+    nft_metadata = []
 
     citizen_number_pad_length = math.ceil(math.log10(len(citizens)))
-    for token_id, citizen in enumerate(citizens):
+    for token_id, citizen in enumerate(dune_citizens):
         token = citizen['token']
         network = citizen['chain']
         description = f"CoW Citizen - " \
                       f"Early investor in the CoW Protocol with {token} on {network}"
-        results.append({
+        nft_metadata.append({
             "id": token_id,
             "description": description,
             "external_url": "https://citizen.cow.fi/NFT/",
@@ -70,16 +69,16 @@ def fetch_cow_citizens(
             ]
         })
 
-    return results
+    return citizens, nft_metadata
 
 
 if __name__ == "__main__":
     import json
 
     dune_connection = DuneAnalytics.new_from_environment()
-    cow_citizen_nfts = fetch_cow_citizens(dune_connection)
-    print("Total Citizens", len(cow_citizen_nfts))
+    citizens, nfts = fetch_cow_citizens(dune_connection)
+    print("Total Citizens", len(nfts))
     OUTFILE = './out/citizens.json'
     print(f"Writing to {OUTFILE}")
     with open(OUTFILE, 'w', encoding='utf-8') as f:
-        json.dump(cow_citizen_nfts, f)
+        json.dump(nfts, f, indent=2)
