@@ -1,6 +1,5 @@
 """
-Stores the result of querying entire GNO token holders on both networks into a single file
-`data/{network}-lp-holders.csv`
+Stores the resulting NFT metadata of CoW Citizens on both networks `out/citizens.json`
 """
 from __future__ import annotations
 
