@@ -1,5 +1,7 @@
 with
--- For a permanent version of this query please visit: https://dune.xyz/queries/453009
+-- For a permanent version of this query please visit
+-- Mainnet: https://dune.xyz/queries/453009
+-- Gnosis Chain: https://dune.xyz/queries/453088
 investment_claims as (
     select concat('0x', encode(claimant, 'hex'))                     as claimant,
            sum(case when "claimType" = 1 then "claimedAmount" else 0 end)                                   as gno_option_claimed,
@@ -33,7 +35,7 @@ independent_investments_exercised as (
            end as investor_option_exercised,
            case
                when greatest(gno_option_claimed, user_option_claimed, investor_option_claimed) = gno_option_claimed then 'GNO'
-               when greatest(gno_option_claimed, user_option_claimed, investor_option_claimed) = user_option_claimed then 'ETH'
+               when greatest(gno_option_claimed, user_option_claimed, investor_option_claimed) = user_option_claimed then '{{UserOptionToken}}'
                when greatest(gno_option_claimed, user_option_claimed, investor_option_claimed) = investor_option_claimed then 'USDC'
            end as dominant_claim
     from investment_claims
@@ -45,12 +47,12 @@ exercised_investments as (
     select claimant,
            case
                when dominant_claim = 'GNO' then gno_option_exercised
-               when dominant_claim = 'ETH' then user_option_exercised
+               when dominant_claim = '{{UserOptionToken}}' then user_option_exercised
                when dominant_claim = 'USDC' then investor_option_exercised
            end as investment_exercised,
            case
                when dominant_claim = 'GNO' then gno_claim_index
-               when dominant_claim = 'ETH' then user_claim_index
+               when dominant_claim = '{{UserOptionToken}}' then user_claim_index
                when dominant_claim = 'USDC' then investor_claim_index
            end as claim_index,
            dominant_claim
@@ -60,6 +62,6 @@ exercised_investments as (
 select claimant       as "wallet",
        claim_index,
        dominant_claim as token,
-       'Ethereum'     as chain
+       '{{ChainName}}'     as chain
 from exercised_investments
 where investment_exercised >= '{{InvestmentThreshold}}'
