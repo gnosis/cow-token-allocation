@@ -6,6 +6,8 @@ from __future__ import annotations
 import json
 import math
 
+from web3 import Web3
+
 from src.dune_analytics import DuneAnalytics
 
 
@@ -58,7 +60,7 @@ def fetch_cow_citizens(
         description = f"CoW Citizen - " \
                       f"Early investor in the CoW Protocol with {token} on {network}"
         citizens.append({
-            "wallet": citizen['wallet'],
+            "wallet": Web3.toChecksumAddress(citizen['wallet']),
             "tokenID": token_id,
         })
         nfts.append({
