@@ -128,7 +128,7 @@ class EvmAccountInfo:
                 ) from err
         return results
 
-    def get_null_balances(self) -> set[str]:
+    def get_null_balances(self, epsilon=10 ** 16) -> set[str]:
         print(f"Fetching balances at {len(self.addresses)} addresses on "
               f"{self.network} (this may take a while)...")
         results = {}
@@ -136,7 +136,7 @@ class EvmAccountInfo:
             partition = self.addresses[index:index + self.max_batch_size]
             results |= self._limited_balances(partition)
 
-        null_balances = sorted([Account(k) for k, v in results.items() if v == 0])
+        null_balances = sorted([Account(k) for k, v in results.items() if v < epsilon])
         print(f"found {len(null_balances)} accounts will zero balance, writing to file")
         balance_file = self.null_balance_file.filename(self.network)
         write_to_csv(data_list=null_balances, outfile=balance_file)
