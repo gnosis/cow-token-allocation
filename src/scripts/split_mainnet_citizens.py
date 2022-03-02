@@ -19,6 +19,7 @@ def split_citizens(citizens: list[dict]):
     contract_map = account_info.contracts(
         load_from=NetworkFile("checksum-contracts.txt")
     )
+    num_citizens = len(citizens)
     mainnet_safes = []
     i = 0
     while i < len(citizens):
@@ -26,6 +27,7 @@ def split_citizens(citizens: list[dict]):
             mainnet_safes.append(citizens.pop(i))
         i += 1
 
+    assert num_citizens == len(mainnet_safes) + len(citizens)
     print(f"Found {len(mainnet_safes)} mainnet only citizens")
     mainnet_outfile = './out/mainnet-citizens.json'
     print(f"Writing Mainnet Citizens to {mainnet_outfile}")
