@@ -3,7 +3,6 @@ Single use EthRPC module for fetching code at address specified
 and determining whether the address is a deployed smart contract.
 """
 import argparse
-from collections import defaultdict
 
 import requests
 
