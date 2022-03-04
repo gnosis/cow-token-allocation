@@ -11,6 +11,11 @@ SNAPSHOT_BLOCK_NUMBER = {
     'gchain': os.environ.get('SNAPSHOT_BLOCK_XDAI', "20024195"),
 }
 
+NODE_URL = {
+    'mainnet': os.environ.get('NODE_URL'),
+    'gchain': 'https://rpc.gnosischain.com/',
+}
+
 FILE_OUT_PATH = os.environ.get('FILE_OUT_PATH', './out')
 
 # Lowest total balance of GNO to be considered eligible for allocation
