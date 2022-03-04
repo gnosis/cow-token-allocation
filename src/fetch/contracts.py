@@ -7,6 +7,8 @@ from collections import defaultdict
 
 import requests
 
+from src.contract_bytecode import WALLET_BYTECODE, NOT_WALLET_BYTECODE, \
+    UNVERIFIED_BYTECODE
 from src.files import NetworkFile
 from src.models import Account
 from src.utils.data import File
@@ -107,6 +109,40 @@ class EvmAccountInfo:
         print(f"found {len(confirmed_contracts)} contracts, writing to file")
         write_to_csv(data_list=confirmed_contracts, outfile=load_file)
         return results
+
+    def get_non_wallets(self, contracts: list[str]):
+        code_at = self.batch_call(
+            addresses=contracts,
+            func=self._get_code_at
+        )
+        collector = defaultdict(list)
+        for account, code in code_at.items():
+            collector[code].append(account)
+
+        total_wallets = 0
+        wallets = set()
+        not_wallets = {}
+        unverified = {}
+        for byte_code, accounts in collector.items():
+            if byte_code in WALLET_BYTECODE:
+                wallets |= set(accounts)
+                total_wallets += len(accounts)
+            elif byte_code in NOT_WALLET_BYTECODE:
+                not_wallets[NOT_WALLET_BYTECODE[byte_code]] = accounts
+            elif byte_code in UNVERIFIED_BYTECODE:
+                # Can't be certain if unverified code is a wallet, so assume it is.
+                wallets |= set(accounts)
+                unverified[UNVERIFIED_BYTECODE[byte_code]] = accounts
+            else:
+                # We should never reach this!
+                raise RuntimeError(
+                    f"Unclassified Contract Bytecode:\n"
+                    f"{byte_code}\n"
+                    f"example address: {accounts[0]}"
+                )
+
+        print(f"found {total_wallets} wallet contracts on {self.network}")
+        return set(contracts) - wallets
 
     def _limited_balances(self, addresses: list[str]) -> dict[str, int]:
         request_data = []
