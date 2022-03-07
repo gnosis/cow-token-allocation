@@ -24,21 +24,21 @@ def non_wallet_allocation(network: str, allocation_file: File) -> int:
         if contracts[a.Account] is True
     ], key=lambda t: t.Airdrop, reverse=True)
 
-    allocation_total, found = 0, 0
-    for allocation in sorted_contract_allocations:
-        if allocation.Account in not_wallets:
-            gno_allocation = allocation.Airdrop + allocation.GnoOption
+    airdrop_total, found = 0, 0
+    for alloc in sorted_contract_allocations:
+        if alloc.Account in not_wallets:
             # proof that this only affects GNO allocations!
-            assert allocation.total() - gno_allocation == 0
-            allocation_total += allocation.Airdrop + allocation.GnoOption
+            gno_allocation = alloc.Airdrop + alloc.GnoOption
+            assert alloc.total() - gno_allocation == 0
+            airdrop_total += alloc.Airdrop
             if found < 3:
                 found += 1
                 print(
-                    f"{found}. {allocation.Account} - {(gno_allocation / 1e24):.3f}M"
+                    f"{found}. {alloc.Account} - {(alloc.Airdrop / 1e24):.3f}M"
                 )
 
-    print(f"total {network} ~{(allocation_total / 1e24):.2f}M")
-    return allocation_total
+    print(f"total {network} (in WEI) {airdrop_total}")
+    return airdrop_total
 
 
 if __name__ == '__main__':
@@ -49,4 +49,7 @@ if __name__ == '__main__':
         network='gchain', allocation_file=AllocationFiles().gchain_allocation
     )
 
-    print("Total Non Contract Allocation (in WEI)", gchain_total + mainnet_total)
+    print(
+        "Grand Total Non Wallet Airdrop Allocation (in WEI)",
+        gchain_total + mainnet_total
+    )
