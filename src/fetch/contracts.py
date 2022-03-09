@@ -121,18 +121,13 @@ class EvmAccountInfo:
 
         total_wallets = 0
         wallets = set()
-        not_wallets = {}
-        unverified = {}
         for byte_code, accounts in collector.items():
-            if byte_code in WALLET_BYTECODE:
+            if byte_code in WALLET_BYTECODE | UNVERIFIED_BYTECODE.keys():
+                # Can't be certain if unverified code is a wallet, so assume it is.
                 wallets |= set(accounts)
                 total_wallets += len(accounts)
             elif byte_code in NOT_WALLET_BYTECODE:
-                not_wallets[NOT_WALLET_BYTECODE[byte_code]] = accounts
-            elif byte_code in UNVERIFIED_BYTECODE:
-                # Can't be certain if unverified code is a wallet, so assume it is.
-                wallets |= set(accounts)
-                unverified[UNVERIFIED_BYTECODE[byte_code]] = accounts
+                pass
             else:
                 # We should never reach this!
                 raise RuntimeError(
