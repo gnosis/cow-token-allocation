@@ -119,13 +119,11 @@ class EvmAccountInfo:
         for account, code in code_at.items():
             collector[code].append(account)
 
-        total_wallets = 0
         wallets = set()
         for byte_code, accounts in collector.items():
             if byte_code in WALLET_BYTECODE | UNVERIFIED_BYTECODE.keys():
                 # Can't be certain if unverified code is a wallet, so assume it is.
                 wallets |= set(accounts)
-                total_wallets += len(accounts)
             elif byte_code in NOT_WALLET_BYTECODE:
                 pass
             else:
@@ -136,7 +134,7 @@ class EvmAccountInfo:
                     f"example address: {accounts[0]}"
                 )
 
-        print(f"found {total_wallets} wallet contracts on {self.network}")
+        print(f"found {len(wallets)} wallet contracts on {self.network}")
         return set(contracts) - wallets
 
     def _limited_balances(self, addresses: list[str]) -> dict[str, int]:
