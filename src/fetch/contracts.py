@@ -3,6 +3,7 @@ Single use EthRPC module for fetching code at address specified
 and determining whether the address is a deployed smart contract.
 """
 import argparse
+from typing import Callable
 
 import requests
 
@@ -74,7 +75,11 @@ class EvmAccountInfo:
             contracts = set(txt_file.read().splitlines())
         return {addr: addr in contracts for addr in self.addresses}
 
-    def batch_call(self, addresses: list[str], func):
+    def batch_call(
+            self,
+            addresses: list[str],
+            func: Callable[[list[str]], dict[str, int | str]]
+    ) -> dict[str, int | str]:
         print(f"making batch call for {len(addresses)} addresses on "
               f"{self.network} (this will take a while)...")
         results = {}
