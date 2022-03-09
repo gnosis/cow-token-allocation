@@ -1,17 +1,14 @@
-import os
 import unittest
 
+from e2e.test_util import TEST_FILE, drop_files
 from src.constants import NODE_URL
 from src.fetch.contracts import EvmAccountInfo
-from src.files import NetworkFile
-
-test_file = NetworkFile(name="test-file.csv", path='./out/test')
 
 
 class TestCodeGetter(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.dummy_file = test_file
+        self.dummy_file = TEST_FILE
         self.addresses = [
             "0xc0602240900fe3e8f4d4ee3f588dc6ad6251fd97",  # Wallet Contract
             "0xa4A6A282A7fC7F939e01D62D884355d79f5046C1",  # EOA
@@ -19,21 +16,6 @@ class TestCodeGetter(unittest.TestCase):
         self.expected = {
             "0xc0602240900fe3e8f4d4ee3f588dc6ad6251fd97": "0x363d3d373d3d3d363d732a2b85eb1054d6f0c6c2e37da05ed3e5fea684ef5af43d82803e903d91602b57fd5bf3",
         }
-
-    @staticmethod
-    def drop_files(func):
-        def wrapped_func(self):
-            func(self)
-            try:
-                os.remove(test_file.filename('mainnet').filename())
-            except FileNotFoundError:
-                pass
-            try:
-                os.remove(test_file.filename('gchain').filename())
-            except FileNotFoundError:
-                pass
-
-        return wrapped_func
 
     @drop_files
     def test_results(self):
