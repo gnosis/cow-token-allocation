@@ -3,6 +3,7 @@ Single use EthRPC module for fetching code at address specified
 and determining whether the address is a deployed smart contract.
 """
 import argparse
+import csv
 from collections import defaultdict
 
 import requests
@@ -70,12 +71,13 @@ class EvmAccountInfo:
                 ) from err
         return results
 
-    def load_from_file(self, file: File) -> dict[str, bool]:
+    @staticmethod
+    def load_from_file(file: File) -> set:
         """Loads results dict from a file containing known contract addresses"""
         print(f"loading contracts from {file.name}")
-        with open(file.filename(), 'r', encoding='utf-8') as txt_file:
-            contracts = set(txt_file.read().splitlines())
-        return {addr: addr in contracts for addr in self.addresses}
+        with open(file.filename(), 'r', encoding='utf-8') as csv_file:
+            reader = csv.DictReader(csv_file)
+            return set(row['account'] for row in reader)
 
     def batch_call(self, addresses: list[str], func):
         print(f"making batch call for {len(addresses)} addresses on "
@@ -86,7 +88,7 @@ class EvmAccountInfo:
             results |= func(partition)
         return results
 
-    def contracts(self, load_from: NetworkFile) -> dict[str, bool]:
+    def contracts(self, load_from: NetworkFile) -> set:
         """
         Allows us to instantiate the code getter without actually fetching
         results are only fetched upon call to this method.
@@ -100,19 +102,19 @@ class EvmAccountInfo:
 
         batch_results = self.batch_call(self.addresses, self._get_code_at)
         results = {
-            account: code != "0x"
-            for account, code in batch_results.items()
+            account for account, code in batch_results.items()
+            if code != "0x"
         }
-        confirmed_contracts = sorted(
-            [Account(k) for k, v in results.items() if v]
+        print(f"found {len(results)} contracts, writing to file")
+        write_to_csv(
+            data_list=sorted([Account(k) for k in results]),
+            outfile=load_file
         )
-        print(f"found {len(confirmed_contracts)} contracts, writing to file")
-        write_to_csv(data_list=confirmed_contracts, outfile=load_file)
         return results
 
-    def get_non_wallets(self, contracts: list[str]):
+    def get_non_wallets(self, contracts: set[str]) -> set[str]:
         code_at = self.batch_call(
-            addresses=contracts,
+            addresses=list(contracts),
             func=self._get_code_at
         )
         collector = defaultdict(list)
@@ -197,6 +199,6 @@ if __name__ == '__main__':
         addresses=args.addresses,
         network="mainnet",
     )
-    contract_dict = contract_detector.contracts(NetworkFile("contracts.txt"))
-    for address, result in contract_dict.items():
-        print(f"is_contract({address}): {result}")
+    smart_contracts = contract_detector.contracts(NetworkFile("contracts.txt"))
+    for address in args.addresses:
+        print(f"is_contract({address}): {address in smart_contracts}")

@@ -1,6 +1,7 @@
 import os
 import unittest
 
+from src.constants import NODE_URL
 from src.fetch.contracts import EvmAccountInfo
 from src.files import NetworkFile
 
@@ -12,16 +13,11 @@ class TestCodeGetter(unittest.TestCase):
     def setUp(self) -> None:
         self.dummy_file = test_file
         self.addresses = [
-            "0x9008D19f58AAbD9eD0D60971565AA8510560ab41",  # GPv2Settlement
-            "0x6810e776880c02933d47db1b9fc05908e5386b96",  # GnosisToken
-            "0xba12222222228d8ba445958a75a0704d566bf2c8",  # BalancerVault
+            "0xc0602240900fe3e8f4d4ee3f588dc6ad6251fd97",  # Wallet Contract
             "0xa4A6A282A7fC7F939e01D62D884355d79f5046C1",  # EOA
         ]
         self.expected = {
-            "0x9008D19f58AAbD9eD0D60971565AA8510560ab41": True,
-            "0x6810e776880c02933d47db1b9fc05908e5386b96": True,
-            "0xba12222222228d8ba445958a75a0704d566bf2c8": True,
-            "0xa4A6A282A7fC7F939e01D62D884355d79f5046C1": False
+            "0xc0602240900fe3e8f4d4ee3f588dc6ad6251fd97": "0x363d3d373d3d3d363d732a2b85eb1054d6f0c6c2e37da05ed3e5fea684ef5af43d82803e903d91602b57fd5bf3",
         }
 
     @staticmethod
@@ -40,24 +36,6 @@ class TestCodeGetter(unittest.TestCase):
         return wrapped_func
 
     @drop_files
-    def test_limited_is_contract(self):
-        contract_detector = EvmAccountInfo(
-            max_batch_size=2,
-            node_url=NODE_URL['mainnet'],
-            addresses=self.addresses,
-            network='mainnet'
-        )
-        with self.assertRaises(RuntimeError):
-            contract_detector._get_code_at(self.addresses)
-
-        contract_detector.max_batch_size = len(self.addresses)
-
-        self.assertEqual(
-            contract_detector._get_code_at(self.addresses),
-            self.expected
-        )
-
-    @drop_files
     def test_results(self):
         contract_detector = EvmAccountInfo(
             max_batch_size=2,
@@ -66,7 +44,10 @@ class TestCodeGetter(unittest.TestCase):
             network='mainnet'
         )
 
-        self.assertEqual(contract_detector.contracts(self.dummy_file), self.expected)
+        self.assertEqual(
+            self.expected.keys(),
+            contract_detector.contracts(self.dummy_file)
+        )
 
     def test_fail_with_bad_input(self):
         contract_detector = EvmAccountInfo(
@@ -77,22 +58,6 @@ class TestCodeGetter(unittest.TestCase):
         )
         with self.assertRaises(IOError):
             contract_detector.contracts(self.dummy_file)
-
-    @drop_files
-    def test_limitations(self):
-        num_items = 1000
-        long_list = [
-            "0x" + f"{i}".zfill(40)
-            for i in range(num_items)
-        ]
-        detector = EvmAccountInfo(
-            max_batch_size=num_items // 3,
-            node_url=NODE_URL['mainnet'],
-            addresses=long_list,
-            network='mainnet'
-        )
-        results = detector.contracts(self.dummy_file)
-        self.assertEqual(len(results), num_items)
 
     @drop_files
     def test_null_balances(self):

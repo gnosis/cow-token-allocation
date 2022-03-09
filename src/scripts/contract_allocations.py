@@ -12,16 +12,13 @@ def non_wallet_allocation(network: str, allocation_file: File) -> int:
         network=network
     )
     contracts = account_info.contracts(load_from=NetworkFile("contracts.txt"))
-    not_wallets = account_info.get_non_wallets(
-        [c for c, is_contract in contracts.items() if is_contract]
-    )
+    not_wallets = account_info.get_non_wallets(contracts)
     print(
         f"found {len(not_wallets)} contract allocations to non-wallets on {network}.\n"
         f"printing Top 3"
     )
     sorted_contract_allocations = sorted([
-        a for a in allocations
-        if contracts[a.Account] is True
+        a for a in allocations if a.Account in contracts
     ], key=lambda t: t.Airdrop, reverse=True)
 
     airdrop_total, found = 0, 0
