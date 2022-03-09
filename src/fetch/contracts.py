@@ -121,7 +121,7 @@ class EvmAccountInfo:
 
         wallets = set()
         for byte_code, accounts in collector.items():
-            if byte_code in WALLET_BYTECODE | UNVERIFIED_BYTECODE.keys():
+            if byte_code in WALLET_BYTECODE | UNVERIFIED_BYTECODE:
                 # Can't be certain if unverified code is a wallet, so assume it is.
                 wallets |= set(accounts)
             elif byte_code in NOT_WALLET_BYTECODE:
