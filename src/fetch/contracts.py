@@ -96,7 +96,7 @@ class EvmAccountInfo:
             try:
                 return self.load_from_file(load_file)
             except FileNotFoundError:
-                print(f"file at {load_from.name} not found. Fetching from Node")
+                print(f"file at {load_file} not found. Fetching from Node")
 
         batch_results = self.batch_call(self.addresses, self._get_code_at)
         results = {
