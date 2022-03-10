@@ -3,16 +3,20 @@ Single use EthRPC module for fetching code at address specified
 and determining whether the address is a deployed smart contract.
 """
 import argparse
+from typing import Callable, TypeVar
 
 import requests
 
-# pylint: disable=too-few-public-methods
 from src.files import NetworkFile
 from src.models import Account
 from src.utils.data import File
 from src.utils.file import write_to_csv
 
+# pylint: disable=invalid-name
+V = TypeVar('V', int, str)
 
+
+# pylint: disable=too-few-public-methods
 class EvmAccountInfo:
     """
     Class consisting of 3 parameters to determine if the addresses are contracts.
@@ -34,19 +38,12 @@ class EvmAccountInfo:
         # de-duplicate to reduce unnecessary queries
         self.addresses = list(set(addresses))
         self.null_balance_file = NetworkFile("null-balances.csv")
+        # TODO - could store the results of batch calls in the instance
+        #  However this would require self.update_all whenever the addresses change.
 
-    def _limited_is_contract(self, addresses: list[str]) -> dict[str, bool]:
+    def _get_code_at(self, addresses: list[str]) -> dict[str, str]:
         """
-        :return: map {address => is_contract}
-        Example:
-        [
-            '0x9008D19f58AAbD9eD0D60971565AA8510560ab41',
-            '0xa4A6A282A7fC7F939e01D62D884355d79f5046C1',
-        ] ->
-        {
-            '0x9008D19f58AAbD9eD0D60971565AA8510560ab41': True,
-            '0xa4A6A282A7fC7F939e01D62D884355d79f5046C1': False,
-        }
+        :return: map {address => byte_code_at_address}
         """
         if len(addresses) > self.max_batch_size:
             size = len(addresses)
@@ -66,20 +63,33 @@ class EvmAccountInfo:
         results = {}
         for result_dict in response.json():
             try:
-                results[addresses[result_dict['id']]] = result_dict['result'] != "0x"
+                results[addresses[result_dict['id']]] = result_dict['result']
             except KeyError as err:
                 raise IOError(
-                    f"Request for address \"{addresses[result_dict['id']]}\" "
+                    f"Request for code at address \"{addresses[result_dict['id']]}\" "
                     f"failed with response {result_dict}"
                 ) from err
         return results
 
     def load_from_file(self, file: File) -> dict[str, bool]:
         """Loads results dict from a file containing known contract addresses"""
-        print(f"Loading Contracts from {file.name}")
+        print(f"loading contracts from {file.name}")
         with open(file.filename(), 'r', encoding='utf-8') as txt_file:
             contracts = set(txt_file.read().splitlines())
         return {addr: addr in contracts for addr in self.addresses}
+
+    def batch_call(
+            self,
+            addresses: list[str],
+            func: Callable[[list[str]], dict[str, V]]
+    ) -> dict[str, V]:
+        print(f"making batch call for {len(addresses)} addresses on "
+              f"{self.network} (this will take a while)...")
+        results = {}
+        for index in range(0, len(addresses), self.max_batch_size):
+            partition = addresses[index:index + self.max_batch_size]
+            results |= func(partition)
+        return results
 
     def contracts(self, load_from: NetworkFile) -> dict[str, bool]:
         """
@@ -93,15 +103,14 @@ class EvmAccountInfo:
             except FileNotFoundError:
                 print(f"file at {load_from.name} not found. Fetching from Node")
 
-        addresses = self.addresses
-        print(f"Fetching code at {len(addresses)} addresses on "
-              f"{self.network} (this will take a while)...")
-        results = {}
-        for index in range(0, len(addresses), self.max_batch_size):
-            partition = addresses[index:index + self.max_batch_size]
-            results |= self._limited_is_contract(partition)
-
-        confirmed_contracts = sorted([Account(k) for k, v in results.items() if v])
+        batch_results = self.batch_call(self.addresses, self._get_code_at)
+        results = {
+            account: code != "0x"
+            for account, code in batch_results.items()
+        }
+        confirmed_contracts = sorted(
+            [Account(k) for k, v in results.items() if v]
+        )
         print(f"found {len(confirmed_contracts)} contracts, writing to file")
         write_to_csv(data_list=confirmed_contracts, outfile=load_file)
         return results
@@ -129,12 +138,7 @@ class EvmAccountInfo:
         return results
 
     def get_null_balances(self, epsilon=10 ** 16) -> set[str]:
-        print(f"Fetching balances at {len(self.addresses)} addresses on "
-              f"{self.network} (this may take a while)...")
-        results = {}
-        for index in range(0, len(self.addresses), self.max_batch_size):
-            partition = self.addresses[index:index + self.max_batch_size]
-            results |= self._limited_balances(partition)
+        results = self.batch_call(self.addresses, self._limited_balances)
 
         null_balances = sorted([Account(k) for k, v in results.items() if v < epsilon])
         print(f"found {len(null_balances)} accounts will zero balance, writing to file")

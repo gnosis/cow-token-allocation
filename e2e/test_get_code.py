@@ -4,11 +4,6 @@ import unittest
 from src.fetch.contracts import EvmAccountInfo
 from src.files import NetworkFile
 
-NODE_URL = {
-    'mainnet': os.environ.get('NODE_URL'),
-    'gchain': 'https://rpc.gnosischain.com/',
-}
-
 test_file = NetworkFile(name="test-file.csv", path='./out/test')
 
 
@@ -53,12 +48,12 @@ class TestCodeGetter(unittest.TestCase):
             network='mainnet'
         )
         with self.assertRaises(RuntimeError):
-            contract_detector._limited_is_contract(self.addresses)
+            contract_detector._get_code_at(self.addresses)
 
         contract_detector.max_batch_size = len(self.addresses)
 
         self.assertEqual(
-            contract_detector._limited_is_contract(self.addresses),
+            contract_detector._get_code_at(self.addresses),
             self.expected
         )
 

@@ -119,7 +119,7 @@ class MerkleLeaf:
         )
 
     def __str__(self):
-        return f"{self.Account}: {self.Airdrop / 10 ** 18}"
+        return f"{self.Account} - {self.Airdrop / 10 ** 18}"
 
     def __hash__(self):
         return self.Account.__hash__()
