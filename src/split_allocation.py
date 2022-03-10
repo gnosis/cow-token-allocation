@@ -276,18 +276,11 @@ def fetch_and_split_allocations(
     return split_allocations(
         allocations=fetched_allocations,
         known_contracts={
-            network: {
-                address
-                for address, is_contract in
-                EvmAccountInfo(
-                    node_url=NODE_URL[network],
-                    addresses=[a.Account for a in fetched_allocations],
-                    network=network
-                ).contracts(
-                    load_from=AllocationFiles.contracts
-                ).items()
-                if is_contract
-            }
+            network: EvmAccountInfo(
+                node_url=NODE_URL[network],
+                addresses=[a.Account for a in fetched_allocations],
+                network=network
+            ).contracts(load_from=AllocationFiles.contracts)
             for network in ['mainnet', 'gchain']
         },
         accounts={
