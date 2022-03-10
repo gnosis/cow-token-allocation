@@ -5,6 +5,8 @@ and determining whether the address is a deployed smart contract.
 import argparse
 import csv
 from collections import defaultdict
+from typing import Callable, TypeVar
+
 
 import requests
 
@@ -15,6 +17,8 @@ from src.models import Account
 from src.utils.data import File
 from src.utils.file import write_to_csv
 
+# pylint: disable=invalid-name
+V = TypeVar('V', int, str)
 
 # pylint: disable=too-few-public-methods
 class EvmAccountInfo:
@@ -79,7 +83,12 @@ class EvmAccountInfo:
             reader = csv.DictReader(csv_file)
             return set(row['account'] for row in reader)
 
-    def batch_call(self, addresses: list[str], func):
+
+    def batch_call(
+            self,
+            addresses: list[str],
+            func: Callable[[list[str]], dict[str, V]]
+    ) -> dict[str, V]:
         print(f"making batch call for {len(addresses)} addresses on "
               f"{self.network} (this will take a while)...")
         results = {}
@@ -88,7 +97,7 @@ class EvmAccountInfo:
             results |= func(partition)
         return results
 
-    def contracts(self, load_from: NetworkFile) -> set:
+    def contracts(self, load_from: NetworkFile) -> set[str]:
         """
         Allows us to instantiate the code getter without actually fetching
         results are only fetched upon call to this method.

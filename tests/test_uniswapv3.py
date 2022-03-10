@@ -7,11 +7,13 @@ from src.models import GnoHolder
 from src.utils.univ3 import execute_query, Position, Pool
 
 
+from e2e.test_util import TEST_FILE, drop_files
+
 class TestUniswapV3Fetching(unittest.TestCase):
     def setUp(self) -> None:
         self.gno_token = GNO_TOKEN['mainnet']
-        self.load_from = File("dummyfile", path="/tmp")
 
+    @drop_files
     def test_fetch_pools(self):
         block_number = 13974427
         known_pools = [
@@ -44,10 +46,11 @@ class TestUniswapV3Fetching(unittest.TestCase):
         block_before_all_pools = 12506297
         self.assertEqual([], fetch_pools(block_before_all_pools, self.gno_token))
 
+    @drop_files
     def test_fetch_positions(self):
-        block_before_all_gno_pools = 12506297
+        block_before_all_gno_pools = 0
         self.assertEqual(
-            fetch_univ3_gno(block_before_all_gno_pools, self.gno_token, self.load_from),
+            fetch_univ3_gno(block_before_all_gno_pools, self.gno_token, TEST_FILE),
             {}
         )
         # Position created at pool deployment:
@@ -77,9 +80,10 @@ class TestUniswapV3Fetching(unittest.TestCase):
         # gno_added = 351.730977107037373565
         # self.assertEqual(expected_position.gno_amount(), gno_added)
 
+    @drop_files
     def test_fetch_snapshot_positions(self):
         snapshot_block = 13974427
-        positions = fetch_univ3_gno(snapshot_block, self.gno_token, self.load_from)
+        positions = fetch_univ3_gno(snapshot_block, self.gno_token, TEST_FILE)
 
         print(positions)
 

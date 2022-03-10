@@ -1,6 +1,6 @@
 import unittest
 
-from e2e.test_util import TEST_FILE, drop_files
+from e2e.test_util import TEST_NETWORK_FILE, drop_files
 from src.constants import NODE_URL
 from src.fetch.contracts import EvmAccountInfo
 
@@ -8,7 +8,6 @@ from src.fetch.contracts import EvmAccountInfo
 class TestCodeGetter(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.dummy_file = TEST_FILE
         self.addresses = [
             "0xc0602240900fe3e8f4d4ee3f588dc6ad6251fd97",  # Wallet Contract
             "0xa4A6A282A7fC7F939e01D62D884355d79f5046C1",  # EOA
@@ -28,7 +27,7 @@ class TestCodeGetter(unittest.TestCase):
 
         self.assertEqual(
             self.expected.keys(),
-            contract_detector.contracts(self.dummy_file)
+            contract_detector.contracts(TEST_NETWORK_FILE)
         )
 
     def test_fail_with_bad_input(self):
@@ -39,7 +38,7 @@ class TestCodeGetter(unittest.TestCase):
             network='mainnet'
         )
         with self.assertRaises(IOError):
-            contract_detector.contracts(self.dummy_file)
+            contract_detector.contracts(TEST_NETWORK_FILE)
 
     @drop_files
     def test_null_balances(self):
