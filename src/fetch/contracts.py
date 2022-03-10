@@ -3,16 +3,21 @@ Single use EthRPC module for fetching code at address specified
 and determining whether the address is a deployed smart contract.
 """
 import argparse
-from collections import defaultdict
-
-import requests
 
 from src.contract_bytecode import WALLET_BYTECODE, NOT_WALLET_BYTECODE, \
     UNVERIFIED_BYTECODE
+from collections import defaultdict
+from typing import Callable, TypeVar
+
+import requests
+
 from src.files import NetworkFile
 from src.models import Account
 from src.utils.data import File
 from src.utils.file import write_to_csv
+
+# pylint: disable=invalid-name
+V = TypeVar('V', int, str)
 
 
 # pylint: disable=too-few-public-methods
@@ -77,7 +82,11 @@ class EvmAccountInfo:
             contracts = set(txt_file.read().splitlines())
         return {addr: addr in contracts for addr in self.addresses}
 
-    def batch_call(self, addresses: list[str], func):
+    def batch_call(
+            self,
+            addresses: list[str],
+            func: Callable[[list[str]], dict[str, V]]
+    ) -> dict[str, V]:
         print(f"making batch call for {len(addresses)} addresses on "
               f"{self.network} (this will take a while)...")
         results = {}
