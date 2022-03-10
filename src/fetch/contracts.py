@@ -3,14 +3,13 @@ Single use EthRPC module for fetching code at address specified
 and determining whether the address is a deployed smart contract.
 """
 import argparse
-
-from src.contract_bytecode import WALLET_BYTECODE, NOT_WALLET_BYTECODE, \
-    UNVERIFIED_BYTECODE
 from collections import defaultdict
 from typing import Callable, TypeVar
 
 import requests
 
+from src.contract_bytecode import WALLET_BYTECODE, NOT_WALLET_BYTECODE, \
+    UNVERIFIED_BYTECODE
 from src.files import NetworkFile
 from src.models import Account
 from src.utils.data import File
