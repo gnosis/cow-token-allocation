@@ -3,10 +3,13 @@ Single use EthRPC module for fetching code at address specified
 and determining whether the address is a deployed smart contract.
 """
 import argparse
+from collections import defaultdict
 from typing import Callable, TypeVar
 
 import requests
 
+from src.contract_bytecode import WALLET_BYTECODE, NOT_WALLET_BYTECODE, \
+    UNVERIFIED_BYTECODE
 from src.files import NetworkFile
 from src.models import Account
 from src.utils.data import File
@@ -101,7 +104,7 @@ class EvmAccountInfo:
             try:
                 return self.load_from_file(load_file)
             except FileNotFoundError:
-                print(f"file at {load_from.name} not found. Fetching from Node")
+                print(f"file at {load_file} not found. Fetching from Node")
 
         batch_results = self.batch_call(self.addresses, self._get_code_at)
         results = {
@@ -114,6 +117,33 @@ class EvmAccountInfo:
         print(f"found {len(confirmed_contracts)} contracts, writing to file")
         write_to_csv(data_list=confirmed_contracts, outfile=load_file)
         return results
+
+    def get_non_wallets(self, contracts: list[str]):
+        code_at = self.batch_call(
+            addresses=contracts,
+            func=self._get_code_at
+        )
+        collector = defaultdict(list)
+        for account, code in code_at.items():
+            collector[code].append(account)
+
+        wallets = set()
+        for byte_code, accounts in collector.items():
+            if byte_code in WALLET_BYTECODE | UNVERIFIED_BYTECODE:
+                # Can't be certain if unverified code is a wallet, so assume it is.
+                wallets |= set(accounts)
+            elif byte_code in NOT_WALLET_BYTECODE:
+                pass
+            else:
+                # We should never reach this!
+                raise RuntimeError(
+                    f"Unclassified Contract Bytecode:\n"
+                    f"{byte_code}\n"
+                    f"example address: {accounts[0]}"
+                )
+
+        print(f"found {len(wallets)} wallet contracts on {self.network}")
+        return set(contracts) - wallets
 
     def _limited_balances(self, addresses: list[str]) -> dict[str, int]:
         request_data = []
