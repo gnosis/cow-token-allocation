@@ -7,7 +7,6 @@ import csv
 from collections import defaultdict
 from typing import Callable, TypeVar
 
-
 import requests
 
 from src.contract_bytecode import WALLET_BYTECODE, NOT_WALLET_BYTECODE, \
