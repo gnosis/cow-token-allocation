@@ -2,6 +2,7 @@ from src.constants import NODE_URL
 from src.fetch.contracts import EvmAccountInfo
 from src.files import AllocationFiles, NetworkFile, File
 from src.generate.merkle_data import MerkleLeaf
+from src.utils.file import write_to_csv
 
 
 def non_wallet_allocation(network: str, allocation_file: File) -> int:
@@ -20,10 +21,11 @@ def non_wallet_allocation(network: str, allocation_file: File) -> int:
     sorted_contract_allocations = sorted([
         a for a in allocations if a.Account in contracts
     ], key=lambda t: t.Airdrop, reverse=True)
-
+    misallocations = []
     airdrop_total, found = 0, 0
     for alloc in sorted_contract_allocations:
         if alloc.Account in not_wallets:
+            misallocations.append(alloc)
             # proof that this only affects GNO allocations!
             gno_allocation = alloc.Airdrop + alloc.GnoOption
             assert alloc.total() - gno_allocation == 0
@@ -33,7 +35,7 @@ def non_wallet_allocation(network: str, allocation_file: File) -> int:
                 print(
                     f"{found}. {alloc.Account} - {(alloc.Airdrop / 1e24):.3f}M"
                 )
-
+    write_to_csv(misallocations, File(f"{network}-misallocations.csv"))
     print(f"total {network} (in WEI) {airdrop_total}")
     return airdrop_total
 
