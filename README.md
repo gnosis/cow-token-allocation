@@ -1,5 +1,6 @@
-!!! **ATTENTION - THIS REPO HAS BEEN ARCHIVED - ALL FUTURE DEVELOPMENT WILL OCCUR HERE: https://github.com/cowprotocol/token-allocation** !!!
+!!! **ATTENTION** !!! 
 
+The team that worked on this project has spun out of Gnosis Organisation and continues development on a forked repo (April 5, 2022) which is available here [https://github.com/cowprotocol/token-allocation](https://github.com/cowprotocol/token-allocation)
 
 # Table of Contents
 
